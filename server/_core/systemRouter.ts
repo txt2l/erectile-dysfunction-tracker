@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { notifyOwner } from "./notification";
-import { adminProcedure, publicProcedure, router } from "./trpc";
+import { adminProcedure, publicProcedure, protectedProcedure, router } from "./trpc";
+import * as db from "../db";
 
 export const systemRouter = router({
   health: publicProcedure
@@ -25,5 +26,11 @@ export const systemRouter = router({
       return {
         success: delivered,
       } as const;
+    }),
+
+  getLogs: protectedProcedure
+    .input(z.object({ roomId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getRoomActivityLogs(input.roomId);
     }),
 });

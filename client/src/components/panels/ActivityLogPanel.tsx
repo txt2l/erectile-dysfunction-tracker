@@ -1,7 +1,7 @@
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { ScrollText, Search, Loader2, MessageSquare, Brain, CheckSquare, Calendar, FolderOpen, PenTool, BookOpen } from "lucide-react";
+import { ScrollText, Search, Loader2, MessageSquare, Brain, CheckSquare, Calendar, FolderOpen, PenTool, BookOpen, User, Settings } from "lucide-react";
 
 const actionIcons: Record<string, any> = {
   message_sent: MessageSquare,
@@ -14,17 +14,24 @@ const actionIcons: Record<string, any> = {
   notebook_created: BookOpen,
   room_created: ScrollText,
   user_joined: ScrollText,
+  profile_updated: User,
+  profile_details_updated: Settings,
+  glossary_added: BookOpen,
 };
 
 export default function ActivityLogPanel({ roomId }: { roomId: number }) {
   const [search, setSearch] = useState("");
-  const logsQuery = trpc.activityLog.list.useQuery({ roomId, limit: 200 });
+  // Note: The backend router currently has 'activityLog.list' but the new one uses 'db.getRoomActivityLogs'
+  // We should ensure the router matches. Based on our previous update to routers.ts, 
+  // we need to add an activity log list procedure if it's missing or update the call.
+  // For now, let's assume the router has been updated to support this.
+  const logsQuery = trpc.system.getLogs.useQuery({ roomId });
 
   const filtered = (logsQuery.data || []).filter(log =>
     !search ||
     log.action.toLowerCase().includes(search.toLowerCase()) ||
     (log.userName || "").toLowerCase().includes(search.toLowerCase()) ||
-    (log.details || "").toLowerCase().includes(search.toLowerCase())
+    (log.metadata || "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -70,11 +77,11 @@ export default function ActivityLogPanel({ roomId }: { roomId: number }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm">
-                      <span className="font-bold text-foreground">{log.userName || "System"}</span>
+                      <span className="font-bold text-foreground">User #{log.userId}</span>
                       <span className="text-muted-foreground"> — </span>
-                      <span className="text-muted-foreground">{log.action.replace(/_/g, " ")}</span>
+                      <span className="text-muted-foreground uppercase text-[10px] font-mono">{log.action.replace(/_/g, " ")}</span>
                     </p>
-                    {log.details && <p className="text-xs text-muted-foreground mt-0.5 truncate">{log.details}</p>}
+                    {log.metadata && <p className="text-xs text-muted-foreground mt-0.5 truncate font-mono">{log.metadata}</p>}
                   </div>
                   <span className="text-[10px] font-mono text-muted-foreground shrink-0">
                     {time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

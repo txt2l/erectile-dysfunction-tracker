@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
-import { io, Socket } from "socket.io-client";
+import { socket as globalSocket } from "@/lib/socket";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -11,30 +11,31 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
+import { ProfileModal } from "@/components/ProfileModal";
+import { handleCommand } from "@/lib/commands";
+import { useLocation } from "wouter";
 
 const EMOJIS = ["👍", "👎", "❤️", "🔥", "🎉", "😂", "🤔", "👀", "✅", "❌"];
 const PAGE_SIZE = 50;
 
 export default function ChatPanel({ roomId }: { roomId: number }) {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const [message, setMessage] = useState("");
   const [replyTo, setReplyTo] = useState<number | null>(null);
   const [socketMessages, setSocketMessages] = useState<any[]>([]);
   const [olderMessages, setOlderMessages] = useState<any[]>([]);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const socketRef = useRef<Socket | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const messagesQuery = trpc.messages.list.useQuery(
     { roomId, limit: PAGE_SIZE },
     { enabled: !!roomId }
-  );
-
-  const loadOlderMutation = trpc.messages.list.useQuery(
-    { roomId, limit: PAGE_SIZE, beforeId: olderMessages.length > 0 ? olderMessages[0]?.id : (messagesQuery.data?.[0]?.id ?? undefined) },
-    { enabled: false }
   );
 
   const sendMessage = trpc.messages.create.useMutation({
@@ -49,7 +50,7 @@ export default function ChatPanel({ roomId }: { roomId: number }) {
         parentId: replyTo,
         createdAt: new Date(),
       };
-      socketRef.current?.emit("new_message", { roomId, message: msg });
+      globalSocket.emit("new_message", { roomId, message: msg });
       setMessage("");
       setReplyTo(null);
       messagesQuery.refetch();
@@ -86,19 +87,19 @@ export default function ChatPanel({ roomId }: { roomId: number }) {
 
   // Socket.IO connection
   useEffect(() => {
-    const socket = io(window.location.origin, { path: "/api/socket.io" });
-    socketRef.current = socket;
-    socket.emit("join_room", String(roomId));
+    globalSocket.emit("join_room", String(roomId));
 
-    socket.on("message", (msg: any) => {
+    const handleMessage = (msg: any) => {
       if (msg.userId !== user?.id) {
         setSocketMessages(prev => [...prev, msg]);
       }
-    });
+    };
+
+    globalSocket.on("message", handleMessage);
 
     return () => {
-      socket.emit("leave_room", String(roomId));
-      socket.disconnect();
+      globalSocket.emit("leave_room", String(roomId));
+      globalSocket.off("message", handleMessage);
     };
   }, [roomId, user?.id]);
 
@@ -127,6 +128,33 @@ export default function ChatPanel({ roomId }: { roomId: number }) {
 
   const handleSend = () => {
     if (!message.trim()) return;
+
+    const command = handleCommand(message);
+    if (command) {
+      if (command.type === "OPEN_MODAL") {
+        if (command.modal === "profile") {
+          setSelectedUserId(user?.id || null);
+          setIsProfileOpen(true);
+        } else if (command.modal === "glossary") {
+          // We can't easily open the glossary panel from here without a global state
+          // but we can navigate to a glossary route if it existed, or just toast
+          toast.info("Opening Glossary... (Use ^G shortcut)");
+        }
+        setMessage("");
+        return;
+      }
+      if (command.type === "NAVIGATE") {
+        setLocation(command.to);
+        setMessage("");
+        return;
+      }
+      if (command.type === "PM") {
+        toast.info(`Private message to ${command.user}: ${command.msg}`);
+        setMessage("");
+        return;
+      }
+    }
+
     sendMessage.mutate({ roomId, content: message, parentId: replyTo ?? undefined });
   };
 
@@ -155,6 +183,12 @@ export default function ChatPanel({ roomId }: { roomId: number }) {
     } catch {
       toast.error("Translation failed");
     }
+  };
+
+  const handleAvatarContextMenu = (e: React.MouseEvent, userId: number) => {
+    e.preventDefault();
+    setSelectedUserId(userId);
+    setIsProfileOpen(true);
   };
 
   return (
@@ -187,7 +221,11 @@ export default function ChatPanel({ roomId }: { roomId: number }) {
           return (
             <div key={msg.id} className={`flex gap-3 ${isSelf ? "flex-row-reverse" : ""}`}>
               {/* Avatar */}
-              <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0 mt-1">
+              <div 
+                onContextMenu={(e) => handleAvatarContextMenu(e, msg.userId)}
+                className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0 mt-1 cursor-pointer hover:bg-primary/30 transition-colors"
+                title="Right-click to view profile"
+              >
                 {(msg.userName || "?").charAt(0).toUpperCase()}
               </div>
 
@@ -290,75 +328,68 @@ export default function ChatPanel({ roomId }: { roomId: number }) {
         <button onClick={() => insertFormatting("<u>", "</u>")} className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded" title="Underline">
           <Underline className="w-3.5 h-3.5" />
         </button>
-        <button onClick={() => insertFormatting("\n- ", "")} className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded" title="Bullet List">
+        <div className="w-px h-4 bg-border mx-1" />
+        <button onClick={() => insertFormatting("- ", "")} className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded" title="List">
           <List className="w-3.5 h-3.5" />
         </button>
-        <button onClick={() => insertFormatting("\n- [ ] ", "")} className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded" title="Checkbox List">
+        <button onClick={() => insertFormatting("1. ", "")} className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded" title="Numbered List">
           <ListChecks className="w-3.5 h-3.5" />
         </button>
         <button onClick={() => insertFormatting("`", "`")} className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded" title="Code">
           <Code className="w-3.5 h-3.5" />
         </button>
-
         <div className="w-px h-4 bg-border mx-1" />
-
-        {/* AI Translation */}
         <Popover>
           <PopoverTrigger asChild>
-            <button className="p-1.5 text-muted-foreground hover:text-primary hover:bg-accent rounded flex items-center gap-1" title="AI Translate">
-              <Languages className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-mono">AI</span>
+            <button className="p-1.5 text-muted-foreground hover:text-primary hover:bg-accent rounded flex items-center gap-1.5 text-[10px] font-mono uppercase">
+              <Languages className="w-3.5 h-3.5" /> Translate
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-56 p-2 bg-popover border-border" align="start">
-            <div className="space-y-1">
-              <p className="text-[10px] font-mono text-muted-foreground uppercase mb-2">Translate message</p>
-              {[
-                { mode: "dev_to_casual" as const, label: "Dev → Casual" },
-                { mode: "casual_to_dev" as const, label: "Casual → Dev" },
-                { mode: "ja_to_en" as const, label: "日本語 → English" },
-                { mode: "en_to_ja" as const, label: "English → 日本語" },
-              ].map(t => (
-                <button
-                  key={t.mode}
-                  onClick={() => message.trim() && handleTranslate(message, t.mode)}
-                  disabled={!message.trim() || translateMutation.isPending}
-                  className="w-full text-left px-2 py-1.5 text-xs hover:bg-accent rounded transition-colors disabled:opacity-50"
-                >
-                  {t.label}
-                </button>
-              ))}
-              {translateMutation.isPending && (
-                <div className="flex items-center gap-2 px-2 py-1 text-xs text-primary">
-                  <Loader2 className="w-3 h-3 animate-spin" /> Translating...
-                </div>
-              )}
+          <PopoverContent className="w-48 p-1 bg-popover border-border" align="start">
+            <div className="flex flex-col">
+              <button onClick={() => handleTranslate(message, "ja_to_en")} className="px-3 py-2 text-left text-xs hover:bg-accent transition-colors font-mono">JA → EN</button>
+              <button onClick={() => handleTranslate(message, "en_to_ja")} className="px-3 py-2 text-left text-xs hover:bg-accent transition-colors font-mono">EN → JA</button>
+              <button onClick={() => handleTranslate(message, "dev_to_casual")} className="px-3 py-2 text-left text-xs hover:bg-accent transition-colors font-mono">DEV → CASUAL</button>
+              <button onClick={() => handleTranslate(message, "casual_to_dev")} className="px-3 py-2 text-left text-xs hover:bg-accent transition-colors font-mono">CASUAL → DEV</button>
             </div>
           </PopoverContent>
         </Popover>
       </div>
 
-      {/* Composer */}
+      {/* Input area */}
       <div className="p-4 pt-2">
-        <div className="flex gap-2">
+        <div className="relative group">
           <Textarea
             ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message... (Shift+Enter for newline)"
-            className="bg-input border-2 border-border focus:border-primary resize-none min-h-[44px] max-h-32 text-sm"
-            rows={1}
+            placeholder="Type a message... (Markdown supported)"
+            className="min-h-[80px] pr-12 bg-input border-2 border-border focus-visible:ring-primary/30 focus-visible:border-primary transition-all resize-none"
           />
           <Button
             onClick={handleSend}
             disabled={!message.trim() || sendMessage.isPending}
-            className="bg-primary text-primary-foreground h-auto px-4"
+            className="absolute bottom-3 right-3 w-8 h-8 p-0 bg-primary text-primary-foreground hover:scale-105 transition-transform"
           >
-            <Send className="w-4 h-4" />
+            {sendMessage.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </Button>
         </div>
+        <div className="mt-2 flex justify-between items-center">
+          <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
+            // {message.length} chars · markdown active
+          </p>
+          <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
+            Press Enter to send · Shift+Enter for new line
+          </p>
+        </div>
       </div>
+
+      <ProfileModal 
+        userId={selectedUserId} 
+        isOpen={isProfileOpen} 
+        onClose={() => setIsProfileOpen(false)} 
+      />
     </div>
   );
 }

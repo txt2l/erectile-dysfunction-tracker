@@ -7,7 +7,7 @@ import { useParams } from "wouter";
 import {
   MessageSquare, Brain, CheckSquare, Calendar, FolderOpen,
   Network, PenTool, BookOpen, ScrollText, User, Plus, Hash,
-  Loader2, ChevronLeft
+  Loader2, ChevronLeft, Users, Search
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -24,13 +24,17 @@ import SignaturesPanel from "@/components/panels/SignaturesPanel";
 import NotebookPanel from "@/components/panels/NotebookPanel";
 import ActivityLogPanel from "@/components/panels/ActivityLogPanel";
 import ProfilePanel from "@/components/panels/ProfilePanel";
+import TeamPanel from "@/components/panels/TeamPanel";
+import { RoomTree } from "@/components/RoomTree";
+import { Omnibox } from "@/components/Omnibox";
 
-type PanelType = "chat" | "memory" | "tasks" | "calendar" | "files" | "mindmap" | "signatures" | "notebook" | "log" | "profile";
+type PanelType = "chat" | "memory" | "tasks" | "calendar" | "files" | "mindmap" | "signatures" | "notebook" | "log" | "profile" | "team";
 
 const panelConfig: { id: PanelType; icon: any; label: string; shortcut: string }[] = [
   { id: "chat", icon: MessageSquare, label: "Chat", shortcut: "" },
+  { id: "team", icon: Users, label: "Team", shortcut: "^T" },
   { id: "memory", icon: Brain, label: "Memory", shortcut: "^M" },
-  { id: "tasks", icon: CheckSquare, label: "Tasks", shortcut: "^T" },
+  { id: "tasks", icon: CheckSquare, label: "Tasks", shortcut: "^K" },
   { id: "calendar", icon: Calendar, label: "Calendar", shortcut: "^C" },
   { id: "files", icon: FolderOpen, label: "Files", shortcut: "^F" },
   { id: "mindmap", icon: Network, label: "Mindmap", shortcut: "^X" },
@@ -49,6 +53,7 @@ export default function Workspace() {
   );
   const [createRoomOpen, setCreateRoomOpen] = useState(false);
   const [newRoomName, setNewRoomName] = useState("");
+  const [newRoomParentId, setNewRoomParentId] = useState<number | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const roomsQuery = trpc.rooms.list.useQuery(undefined, { enabled: !!user });
@@ -58,6 +63,7 @@ export default function Workspace() {
       setSelectedRoomId(data.id);
       setCreateRoomOpen(false);
       setNewRoomName("");
+      setNewRoomParentId(null);
       toast.success("Room created");
     },
   });
@@ -67,7 +73,7 @@ export default function Workspace() {
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         const map: Record<string, PanelType> = {
-          m: "memory", t: "tasks", c: "calendar",
+          m: "memory", t: "team", k: "tasks", c: "calendar",
           f: "files", x: "mindmap", s: "signatures", l: "log",
         };
         const panel = map[e.key.toLowerCase()];
@@ -117,7 +123,7 @@ export default function Workspace() {
   }
 
   const renderPanel = () => {
-    if (!selectedRoomId) {
+    if (!selectedRoomId && activePanel !== "team" && activePanel !== "profile") {
       return (
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
           <div className="text-center space-y-4">
@@ -127,9 +133,10 @@ export default function Workspace() {
         </div>
       );
     }
-    const props = { roomId: selectedRoomId };
+    const props = { roomId: selectedRoomId || 0 };
     switch (activePanel) {
       case "chat": return <ChatPanel {...props} />;
+      case "team": return <TeamPanel />;
       case "memory": return <MemoryPanel {...props} />;
       case "tasks": return <TasksPanel {...props} />;
       case "calendar": return <CalendarPanel {...props} />;
@@ -145,6 +152,8 @@ export default function Workspace() {
 
   return (
     <div className="h-screen bg-background flex overflow-hidden">
+      <Omnibox />
+      
       {/* Left sidebar — rooms + nav icons */}
       <div className={`flex flex-col border-r-2 border-border bg-sidebar transition-all ${sidebarCollapsed ? "w-16" : "w-60"}`}>
         {/* Header */}
@@ -176,9 +185,11 @@ export default function Workspace() {
                 </DialogTrigger>
                 <DialogContent className="bg-card border-2 border-border">
                   <DialogHeader>
-                    <DialogTitle className="font-bold uppercase tracking-wide">New Room</DialogTitle>
+                    <DialogTitle className="font-bold uppercase tracking-wide">
+                      {newRoomParentId ? "New Sub-room" : "New Room"}
+                    </DialogTitle>
                   </DialogHeader>
-                  <form onSubmit={(e) => { e.preventDefault(); if (newRoomName.trim()) createRoom.mutate({ name: newRoomName.trim() }); }}>
+                  <form onSubmit={(e) => { e.preventDefault(); if (newRoomName.trim()) createRoom.mutate({ name: newRoomName.trim(), parentId: newRoomParentId ?? undefined }); }}>
                     <Input
                       value={newRoomName}
                       onChange={(e) => setNewRoomName(e.target.value)}
@@ -195,30 +206,36 @@ export default function Workspace() {
             </div>
           )}
 
-          {roomsQuery.data?.map((room) => (
-            <button
-              key={room.id}
-              onClick={() => setSelectedRoomId(room.id)}
-              className={`w-full text-left px-3 py-2 flex items-center gap-2 transition-colors ${
-                selectedRoomId === room.id
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground border-l-2 border-primary"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 border-l-2 border-transparent"
-              }`}
-            >
-              <Hash className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-              {!sidebarCollapsed && (
-                <span className="text-sm truncate">{room.name}</span>
-              )}
-            </button>
-          ))}
-
-          {sidebarCollapsed && (
-            <button
-              onClick={() => setCreateRoomOpen(true)}
-              className="w-full p-2 flex justify-center text-muted-foreground hover:text-primary"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+          {!sidebarCollapsed ? (
+            <RoomTree 
+              selectedRoomId={selectedRoomId} 
+              onSelect={setSelectedRoomId} 
+              onCreateSubroom={(parentId) => {
+                setNewRoomParentId(parentId);
+                setCreateRoomOpen(true);
+              }}
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-2">
+              {roomsQuery.data?.map((room) => (
+                <button
+                  key={room.id}
+                  onClick={() => setSelectedRoomId(room.id)}
+                  className={`w-10 h-10 flex items-center justify-center rounded transition-colors ${
+                    selectedRoomId === room.id ? "bg-primary/20 text-primary" : "text-muted-foreground hover:bg-sidebar-accent"
+                  }`}
+                  title={room.name}
+                >
+                  <Hash className="w-4 h-4" />
+                </button>
+              ))}
+              <button
+                onClick={() => setCreateRoomOpen(true)}
+                className="w-10 h-10 flex items-center justify-center text-muted-foreground hover:text-primary"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
           )}
         </div>
 
@@ -276,7 +293,7 @@ export default function Workspace() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-mono text-muted-foreground hidden sm:block">
-              ^M ^T ^C ^F ^X ^S ^L
+              ^K (Search) · ^M ^T ^C ^F ^X ^S ^L
             </span>
             <Button
               variant="ghost"

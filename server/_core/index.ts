@@ -8,6 +8,10 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { setupPresence } from "../socket/presence";
+import { sdk } from "./sdk";
+import { COOKIE_NAME } from "@shared/const";
+import { parse as parseCookieHeader } from "cookie";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -38,8 +42,30 @@ async function startServer() {
     path: "/api/socket.io",
   });
 
+  // Socket.IO Middleware for Authentication
+  io.use(async (socket, next) => {
+    try {
+      const cookieHeader = socket.handshake.headers.cookie;
+      if (!cookieHeader) return next(new Error("Authentication error: No cookies"));
+      
+      const cookies = parseCookieHeader(cookieHeader);
+      const sessionCookie = cookies[COOKIE_NAME];
+      if (!sessionCookie) return next(new Error("Authentication error: No session cookie"));
+
+      const user = await sdk.authenticateRequest({ headers: { cookie: cookieHeader } } as any);
+      socket.data.userId = user.id;
+      socket.data.userName = user.name;
+      next();
+    } catch (err) {
+      next(new Error("Authentication error"));
+    }
+  });
+
+  // Setup Presence Tracking
+  setupPresence(io);
+
   io.on("connection", (socket) => {
-    console.log(`[Socket.IO] Client connected: ${socket.id}`);
+    console.log(`[Socket.IO] Client connected: ${socket.id} (User: ${socket.data.userId})`);
 
     socket.on("join_room", (roomId: string) => {
       socket.join(`room:${roomId}`);

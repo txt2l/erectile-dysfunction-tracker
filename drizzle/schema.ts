@@ -10,6 +10,7 @@ export const users = mysqlTable("users", {
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   avatarUrl: text("avatarUrl"),
   bio: text("bio"),
+  location: text("location"), // Added location field
   timezone: varchar("timezone", { length: 64 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -19,9 +20,28 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
+// ─── Profiles ───
+export const profiles = mysqlTable("profiles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  birthdate: varchar("birthdate", { length: 64 }),
+  location: text("location"),
+  profession: text("profession"),
+  position: text("position"),
+  skills: text("skills"), // JSON string
+  interests: text("interests"),
+  quote: text("quote"),
+  websites: text("websites"),
+  socials: text("socials"),
+  coping: text("coping"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 // ─── Rooms ───
 export const rooms = mysqlTable("rooms", {
   id: int("id").autoincrement().primaryKey(),
+  parentId: int("parentId"), // Added parentId for nesting
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   createdBy: int("createdBy").notNull(),
@@ -64,6 +84,7 @@ export const memoryFiles = mysqlTable("memory_files", {
   title: varchar("title", { length: 500 }).notNull(),
   content: text("content"),
   tags: text("tags"),
+  metadata: text("metadata"), // Added metadata field
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -185,12 +206,31 @@ export const notebooks = mysqlTable("notebooks", {
 
 // ─── Activity Log ───
 export const activityLogs = mysqlTable("activity_logs", {
-  id: int("id").autoincrement().primaryKey(),
-  roomId: int("roomId").notNull(),
+  id: varchar("id", { length: 36 }).primaryKey(), // Changed to UUID string
+  roomId: int("roomId"), // Made optional as some logs might be global
   userId: int("userId").notNull(),
   action: varchar("action", { length: 64 }).notNull(),
   entityType: varchar("entityType", { length: 64 }),
   entityId: int("entityId"),
-  details: text("details"),
+  metadata: text("metadata"), // Changed from details to metadata
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// ─── Glossary ───
+export const glossary = mysqlTable("glossary", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  definition: text("definition").notNull(),
+  attachments: text("attachments"), // JSON string of URLs
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// ─── Connectors ───
+export const connectors = mysqlTable("connectors", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  userId: int("userId").notNull(),
+  type: varchar("type", { length: 64 }).notNull(),
+  config: text("config"), // JSON string
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

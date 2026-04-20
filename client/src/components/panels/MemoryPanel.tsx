@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Search, Tag, Trash2, Edit3, Brain, Loader2 } from "lucide-react";
+import { Plus, Search, Tag, Trash2, Edit3, Brain, Loader2, User, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 
@@ -12,11 +12,16 @@ export default function MemoryPanel({ roomId }: { roomId: number }) {
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [form, setForm] = useState({ title: "", content: "", tags: "" });
+  const [form, setForm] = useState({ title: "", content: "", tags: "", metadata: "" });
 
   const memoryQuery = trpc.memory.list.useQuery({ roomId });
   const createMemory = trpc.memory.create.useMutation({
-    onSuccess: () => { memoryQuery.refetch(); setCreateOpen(false); setForm({ title: "", content: "", tags: "" }); toast.success("Memory saved"); },
+    onSuccess: () => { 
+      memoryQuery.refetch(); 
+      setCreateOpen(false); 
+      setForm({ title: "", content: "", tags: "", metadata: "" }); 
+      toast.success("Memory saved"); 
+    },
   });
   const updateMemory = trpc.memory.update.useMutation({
     onSuccess: () => { memoryQuery.refetch(); setEditId(null); toast.success("Memory updated"); },
@@ -58,6 +63,7 @@ export default function MemoryPanel({ roomId }: { roomId: number }) {
               <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Title" className="bg-input border-border" />
               <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} placeholder="Content (Markdown supported)" className="bg-input border-border min-h-[150px]" />
               <Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="Tags (comma-separated)" className="bg-input border-border" />
+              <Input value={form.metadata} onChange={(e) => setForm({ ...form, metadata: e.target.value })} placeholder="Source / Metadata" className="bg-input border-border" />
               <Button onClick={() => form.title && createMemory.mutate({ roomId, ...form })} className="w-full bg-primary text-primary-foreground font-bold" disabled={createMemory.isPending}>
                 {createMemory.isPending ? "Saving..." : "Save Memory"}
               </Button>
@@ -80,12 +86,13 @@ export default function MemoryPanel({ roomId }: { roomId: number }) {
         )}
 
         {filtered.map((mem) => (
-          <div key={mem.id} className="border-2 border-border bg-card p-4 group">
+          <div key={mem.id} className="border-2 border-border bg-card p-4 group relative overflow-hidden">
             {editId === mem.id ? (
               <div className="space-y-2">
                 <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="bg-input border-border" />
                 <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} className="bg-input border-border min-h-[100px]" />
                 <Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} className="bg-input border-border" />
+                <Input value={form.metadata} onChange={(e) => setForm({ ...form, metadata: e.target.value })} className="bg-input border-border" />
                 <div className="flex gap-2">
                   <Button size="sm" onClick={() => updateMemory.mutate({ id: mem.id, ...form })} className="bg-primary text-primary-foreground">Save</Button>
                   <Button size="sm" variant="ghost" onClick={() => setEditId(null)}>Cancel</Button>
@@ -96,7 +103,7 @@ export default function MemoryPanel({ roomId }: { roomId: number }) {
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-bold text-sm uppercase tracking-wide text-card-foreground">{mem.title}</h3>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => { setEditId(mem.id); setForm({ title: mem.title, content: mem.content || "", tags: mem.tags || "" }); }} className="p-1 text-muted-foreground hover:text-primary">
+                    <button onClick={() => { setEditId(mem.id); setForm({ title: mem.title, content: mem.content || "", tags: mem.tags || "", metadata: mem.metadata || "" }); }} className="p-1 text-muted-foreground hover:text-primary">
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
                     <button onClick={() => deleteMemory.mutate({ id: mem.id })} className="p-1 text-muted-foreground hover:text-destructive">
@@ -105,23 +112,36 @@ export default function MemoryPanel({ roomId }: { roomId: number }) {
                   </div>
                 </div>
                 {mem.content && (
-                  <div className="text-sm text-muted-foreground mb-2 prose prose-invert prose-sm max-w-none">
+                  <div className="text-sm text-muted-foreground mb-3 prose prose-invert prose-sm max-w-none">
                     <Streamdown>{mem.content}</Streamdown>
                   </div>
                 )}
-                {mem.tags && (
-                  <div className="flex items-center gap-1 flex-wrap">
-                    <Tag className="w-3 h-3 text-primary" />
-                    {mem.tags.split(",").map((tag, i) => (
-                      <span key={i} className="text-[10px] font-mono px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/20">
-                        {tag.trim()}
-                      </span>
-                    ))}
+                
+                <div className="flex flex-wrap items-center gap-3 mt-auto">
+                  {mem.tags && (
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <Tag className="w-3 h-3 text-primary" />
+                      {mem.tags.split(",").map((tag, i) => (
+                        <span key={i} className="text-[10px] font-mono px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/20">
+                          {tag.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {mem.metadata && (
+                    <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground uppercase">
+                      <Info className="w-3 h-3" /> {mem.metadata}
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground uppercase ml-auto">
+                    <User className="w-3 h-3" /> User #{mem.userId} · {new Date(mem.updatedAt).toLocaleDateString()}
                   </div>
-                )}
-                <div className="text-[10px] font-mono text-muted-foreground mt-2">
-                  {new Date(mem.updatedAt).toLocaleString()}
                 </div>
+                
+                {/* Retro decorative element */}
+                <div className="absolute top-0 right-0 w-6 h-6 bg-primary/5 -rotate-45 translate-x-3 -translate-y-3" />
               </>
             )}
           </div>

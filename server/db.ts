@@ -6,6 +6,7 @@ import {
   memoryFiles, tasks, calendarEvents,
   folders, files, mindmapNodes, mindmapEdges,
   signatures, signedDocuments, notebooks, activityLogs,
+  profiles, glossary, connectors
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -30,7 +31,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   if (!db) return;
   const values: InsertUser = { openId: user.openId };
   const updateSet: Record<string, unknown> = {};
-  const textFields = ["name", "email", "loginMethod"] as const;
+  const textFields = ["name", "email", "loginMethod", "location"] as const;
   type TextField = (typeof textFields)[number];
   const assignNullable = (field: TextField) => {
     const value = user[field];
@@ -62,19 +63,63 @@ export async function getUserById(id: number) {
   return result[0];
 }
 
-export async function updateUserProfile(userId: number, data: { name?: string; bio?: string; timezone?: string; avatarUrl?: string }) {
+export async function getAllUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    id: users.id,
+    name: users.name,
+    email: users.email,
+    avatarUrl: users.avatarUrl,
+    location: users.location
+  }).from(users);
+}
+
+export async function updateUserProfile(userId: number, data: { name?: string; bio?: string; timezone?: string; avatarUrl?: string; location?: string }) {
   const db = await getDb();
   if (!db) return;
   await db.update(users).set({ ...data }).where(eq(users.id, userId));
 }
 
+// ─── Profiles ───
+export async function getProfileByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(profiles).where(eq(profiles.userId, userId)).limit(1);
+  return result[0];
+}
+
+export async function upsertProfile(userId: number, data: any) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(profiles).values({ userId, ...data }).onDuplicateKeyUpdate({ set: data });
+}
+
 // ─── Rooms ───
-export async function createRoom(name: string, description: string | null, createdBy: number) {
+export async function createRoom(name: string, description: string | null, createdBy: number, parentId?: number | null) {
   const db = await getDb();
   if (!db) throw new Error("DB unavailable");
-  const [result] = await db.insert(rooms).values({ name, description, createdBy }).$returningId();
+  const [result] = await db.insert(rooms).values({ name, description, createdBy, parentId: parentId ?? null }).$returningId();
   await db.insert(roomMembers).values({ roomId: result.id, userId: createdBy, role: "owner" });
   return result.id;
+}
+
+export async function updateRoom(id: number, data: { name?: string; description?: string; parentId?: number | null }) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(rooms).set(data).where(eq(rooms.id, id));
+}
+
+export async function deleteRoom(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(rooms).where(eq(rooms.id, id));
+}
+
+export async function searchRooms(query: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(rooms).where(like(rooms.name, `%${query}%`));
 }
 
 export async function getUserRooms(userId: number) {
@@ -151,10 +196,10 @@ export async function getMessageReactions(messageId: number) {
 }
 
 // ─── Memory Bank ───
-export async function createMemoryFile(roomId: number, userId: number, title: string, content: string, tags: string) {
+export async function createMemoryFile(roomId: number, userId: number, title: string, content: string, tags: string, metadata?: string) {
   const db = await getDb();
   if (!db) throw new Error("DB unavailable");
-  const [result] = await db.insert(memoryFiles).values({ roomId, userId, title, content, tags }).$returningId();
+  const [result] = await db.insert(memoryFiles).values({ roomId, userId, title, content, tags, metadata: metadata ?? null }).$returningId();
   return result.id;
 }
 
@@ -164,7 +209,7 @@ export async function getRoomMemoryFiles(roomId: number) {
   return db.select().from(memoryFiles).where(eq(memoryFiles.roomId, roomId)).orderBy(desc(memoryFiles.updatedAt));
 }
 
-export async function updateMemoryFile(id: number, data: { title?: string; content?: string; tags?: string }) {
+export async function updateMemoryFile(id: number, data: { title?: string; content?: string; tags?: string; metadata?: string }) {
   const db = await getDb();
   if (!db) return;
   await db.update(memoryFiles).set(data).where(eq(memoryFiles.id, id));
@@ -268,7 +313,7 @@ export async function createFile(roomId: number, uploadedBy: number, data: { nam
   if (!db) throw new Error("DB unavailable");
   const [result] = await db.insert(files).values({
     roomId, uploadedBy, name: data.name, url: data.url, fileKey: data.fileKey,
-    mimeType: data.mimeType ?? null, size: data.size ?? null, folderId: data.folderId ?? null,
+    mimeType: data.mimeType ?? null, size: data.size ?? null, folderId: data.folderId ?? null
   }).$returningId();
   return result.id;
 }
@@ -276,10 +321,11 @@ export async function createFile(roomId: number, uploadedBy: number, data: { nam
 export async function getRoomFiles(roomId: number, folderId?: number) {
   const db = await getDb();
   if (!db) return [];
-  const condition = folderId !== undefined
-    ? and(eq(files.roomId, roomId), eq(files.folderId, folderId))
-    : eq(files.roomId, roomId);
-  return db.select().from(files).where(condition).orderBy(desc(files.createdAt));
+  let query = db.select().from(files).where(eq(files.roomId, roomId));
+  if (folderId !== undefined) {
+    query = db.select().from(files).where(and(eq(files.roomId, roomId), eq(files.folderId, folderId)));
+  }
+  return query.orderBy(desc(files.createdAt));
 }
 
 export async function deleteFile(id: number) {
@@ -289,23 +335,20 @@ export async function deleteFile(id: number) {
 }
 
 // ─── Mindmap ───
-export async function createMindmapNode(roomId: number, createdBy: number, data: { label?: string; content?: string; nodeType?: string; posX: number; posY: number }) {
-  const db = await getDb();
-  if (!db) throw new Error("DB unavailable");
-  const [result] = await db.insert(mindmapNodes).values({
-    roomId, createdBy, label: data.label ?? null, content: data.content ?? null,
-    nodeType: (data.nodeType as any) ?? "text", posX: data.posX, posY: data.posY,
-  }).$returningId();
-  return result.id;
-}
-
 export async function getRoomMindmapNodes(roomId: number) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(mindmapNodes).where(eq(mindmapNodes.roomId, roomId));
 }
 
-export async function updateMindmapNode(id: number, data: { label?: string; content?: string; posX?: number; posY?: number; width?: number; height?: number }) {
+export async function createMindmapNode(roomId: number, createdBy: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const [result] = await db.insert(mindmapNodes).values({ roomId, createdBy, ...data }).$returningId();
+  return result.id;
+}
+
+export async function updateMindmapNode(id: number, data: any) {
   const db = await getDb();
   if (!db) return;
   await db.update(mindmapNodes).set(data).where(eq(mindmapNodes.id, id));
@@ -314,103 +357,41 @@ export async function updateMindmapNode(id: number, data: { label?: string; cont
 export async function deleteMindmapNode(id: number) {
   const db = await getDb();
   if (!db) return;
-  await db.delete(mindmapEdges).where(sql`${mindmapEdges.sourceId} = ${id} OR ${mindmapEdges.targetId} = ${id}`);
   await db.delete(mindmapNodes).where(eq(mindmapNodes.id, id));
 }
 
-export async function createMindmapEdge(roomId: number, sourceId: number, targetId: number, label?: string) {
-  const db = await getDb();
-  if (!db) throw new Error("DB unavailable");
-  const [result] = await db.insert(mindmapEdges).values({ roomId, sourceId, targetId, label: label ?? null }).$returningId();
-  return result.id;
-}
-
-export async function getRoomMindmapEdges(roomId: number) {
+// ─── Glossary ───
+export async function getGlossary() {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(mindmapEdges).where(eq(mindmapEdges.roomId, roomId));
+  return db.select().from(glossary).orderBy(asc(glossary.name));
 }
 
-export async function deleteMindmapEdge(id: number) {
-  const db = await getDb();
-  if (!db) return;
-  await db.delete(mindmapEdges).where(eq(mindmapEdges.id, id));
-}
-
-// ─── Signatures ───
-export async function createSignature(userId: number, name: string, imageUrl: string, imageKey: string) {
+export async function createGlossaryEntry(data: any) {
   const db = await getDb();
   if (!db) throw new Error("DB unavailable");
-  const [result] = await db.insert(signatures).values({ userId, name, imageUrl, imageKey }).$returningId();
-  return result.id;
-}
-
-export async function getUserSignatures(userId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(signatures).where(eq(signatures.userId, userId)).orderBy(desc(signatures.createdAt));
-}
-
-export async function deleteSignature(id: number) {
-  const db = await getDb();
-  if (!db) return;
-  await db.delete(signatures).where(eq(signatures.id, id));
-}
-
-export async function createSignedDocument(roomId: number, userId: number, signatureId: number, fileId?: number, signedUrl?: string, signedKey?: string) {
-  const db = await getDb();
-  if (!db) throw new Error("DB unavailable");
-  const [result] = await db.insert(signedDocuments).values({ roomId, userId, signatureId, fileId: fileId ?? null, signedUrl: signedUrl ?? null, signedKey: signedKey ?? null }).$returningId();
-  return result.id;
-}
-
-export async function getRoomSignedDocuments(roomId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(signedDocuments).where(eq(signedDocuments.roomId, roomId)).orderBy(desc(signedDocuments.createdAt));
-}
-
-// ─── Notebooks ───
-export async function createNotebook(roomId: number, createdBy: number, title: string, content?: string) {
-  const db = await getDb();
-  if (!db) throw new Error("DB unavailable");
-  const [result] = await db.insert(notebooks).values({ roomId, createdBy, title, content: content ?? null }).$returningId();
-  return result.id;
-}
-
-export async function getRoomNotebooks(roomId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(notebooks).where(eq(notebooks.roomId, roomId)).orderBy(desc(notebooks.updatedAt));
-}
-
-export async function updateNotebook(id: number, data: { title?: string; content?: string }) {
-  const db = await getDb();
-  if (!db) return;
-  await db.update(notebooks).set(data).where(eq(notebooks.id, id));
-}
-
-export async function deleteNotebook(id: number) {
-  const db = await getDb();
-  if (!db) return;
-  await db.delete(notebooks).where(eq(notebooks.id, id));
+  await db.insert(glossary).values(data);
 }
 
 // ─── Activity Log ───
-export async function logActivity(roomId: number, userId: number, action: string, entityType?: string, entityId?: number, details?: string) {
+export async function logActivity(roomId: number | null, userId: number, action: string, entityType?: string, entityId?: number, metadata?: string) {
   const db = await getDb();
   if (!db) return;
-  await db.insert(activityLogs).values({ roomId, userId, action, entityType: entityType ?? null, entityId: entityId ?? null, details: details ?? null });
+  const { randomUUID } = await import("crypto");
+  await db.insert(activityLogs).values({
+    id: randomUUID(),
+    roomId,
+    userId,
+    action,
+    entityType: entityType ?? null,
+    entityId: entityId ?? null,
+    metadata: metadata ?? null,
+    createdAt: new Date(),
+  });
 }
 
-export async function getRoomActivityLogs(roomId: number, limit = 100) {
+export async function getRoomActivityLogs(roomId: number) {
   const db = await getDb();
   if (!db) return [];
-  const result = await db.select({ log: activityLogs, user: users })
-    .from(activityLogs)
-    .innerJoin(users, eq(activityLogs.userId, users.id))
-    .where(eq(activityLogs.roomId, roomId))
-    .orderBy(desc(activityLogs.createdAt))
-    .limit(limit);
-  return result.map(r => ({ ...r.log, userName: r.user.name }));
+  return db.select().from(activityLogs).where(eq(activityLogs.roomId, roomId)).orderBy(desc(activityLogs.createdAt)).limit(100);
 }
