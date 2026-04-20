@@ -50,16 +50,33 @@ export async function setupVite(app: Express, server: Server) {
 export function serveStatic(app: Express) {
   // In production, the server is bundled into dist/index.js
   // The static files are in dist/public
-  // Using process.cwd() ensures we resolve from the project root in production
-  const distPath = path.resolve(process.cwd(), "dist", "public");
-  
-  if (!fs.existsSync(distPath)) {
-    console.error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`
-    );
+  // We try multiple ways to resolve the path to be extremely robust
+  const pathsToTry = [
+    path.resolve(process.cwd(), "dist", "public"),
+    path.resolve(process.cwd(), "public"),
+    path.resolve(import.meta.dirname, "public"),
+    path.resolve(import.meta.dirname, "..", "public"),
+  ];
+
+  let distPath = "";
+  for (const p of pathsToTry) {
+    if (fs.existsSync(p) && fs.existsSync(path.join(p, "index.html"))) {
+      distPath = p;
+      break;
+    }
   }
 
-  // Serve static files from the dist/public directory
+  if (!distPath) {
+    console.error(
+      `Could not find the build directory in any of: ${pathsToTry.join(", ")}`
+    );
+    // Fallback to the first one just in case
+    distPath = pathsToTry[0];
+  } else {
+    console.log(`[Static] Serving files from: ${distPath}`);
+  }
+
+  // Serve static files from the resolved directory
   app.use(express.static(distPath));
 
   // Fall through to index.html for all other routes (SPA support)
@@ -73,7 +90,7 @@ export function serveStatic(app: Express) {
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
     } else {
-      res.status(404).send("Not Found");
+      res.status(404).send(`Not Found: ${req.originalUrl} (Static path: ${distPath})`);
     }
   });
 }
