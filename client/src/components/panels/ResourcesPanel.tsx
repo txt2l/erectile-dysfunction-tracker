@@ -6,17 +6,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, ExternalLink, Trash2, Link as LinkIcon, Search, Tag, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export default function ResourcesPanel({ roomId }: { roomId: number }) {
+export default function ResourcesPanel() {
   const [search, setSearch] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", url: "", category: "general", description: "" });
+  const [form, setForm] = useState({ name: "", url: "", category: "general", tags: [] as string[] });
 
-  const resourcesQuery = trpc.resources.list.useQuery({ roomId });
+  const resourcesQuery = trpc.resources.list.useQuery();
   const createResource = trpc.resources.create.useMutation({
     onSuccess: () => {
       resourcesQuery.refetch();
       setIsAddOpen(false);
-      setForm({ title: "", url: "", category: "general", description: "" });
+      setForm({ name: "", url: "", category: "general", tags: [] });
       toast.success("Resource added");
     }
   });
@@ -25,9 +25,8 @@ export default function ResourcesPanel({ roomId }: { roomId: number }) {
   });
 
   const filtered = (resourcesQuery.data || []).filter(r => 
-    r.title.toLowerCase().includes(search.toLowerCase()) || 
-    r.category.toLowerCase().includes(search.toLowerCase()) ||
-    r.description?.toLowerCase().includes(search.toLowerCase())
+    r.name.toLowerCase().includes(search.toLowerCase()) || 
+    r.category?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -51,8 +50,8 @@ export default function ResourcesPanel({ roomId }: { roomId: number }) {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-mono uppercase text-muted-foreground">Title</label>
-                  <Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="e.g., Affiliate Dashboard" className="bg-input border-border" />
+                  <label className="text-[10px] font-mono uppercase text-muted-foreground">Name</label>
+                  <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g., Affiliate Dashboard" className="bg-input border-border" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-mono uppercase text-muted-foreground">URL</label>
@@ -62,12 +61,8 @@ export default function ResourcesPanel({ roomId }: { roomId: number }) {
                   <label className="text-[10px] font-mono uppercase text-muted-foreground">Category</label>
                   <Input value={form.category} onChange={e => setForm({...form, category: e.target.value})} placeholder="e.g., Affiliate, Tool, Reference" className="bg-input border-border" />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono uppercase text-muted-foreground">Description</label>
-                  <Input value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Brief description..." className="bg-input border-border" />
-                </div>
                 <Button 
-                  onClick={() => createResource.mutate({ roomId, ...form })} 
+                  onClick={() => createResource.mutate(form)} 
                   className="w-full bg-primary text-primary-foreground font-bold uppercase"
                   disabled={createResource.isPending}
                 >
@@ -83,7 +78,7 @@ export default function ResourcesPanel({ roomId }: { roomId: number }) {
           <Input 
             value={search} 
             onChange={e => setSearch(e.target.value)} 
-            placeholder="Search resources by title, category, or description..." 
+            placeholder="Search resources by name, category, or tags..." 
             className="pl-10 bg-input border-border h-10"
           />
         </div>
@@ -115,10 +110,7 @@ export default function ResourcesPanel({ roomId }: { roomId: number }) {
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
-                <h3 className="font-bold text-foreground mb-1 truncate">{resource.title}</h3>
-                {resource.description && (
-                  <p className="text-xs text-muted-foreground mb-4 line-clamp-2 h-8">{resource.description}</p>
-                )}
+                <h3 className="font-bold text-foreground mb-1 truncate">{resource.name}</h3>
                 <a 
                   href={resource.url} 
                   target="_blank" 

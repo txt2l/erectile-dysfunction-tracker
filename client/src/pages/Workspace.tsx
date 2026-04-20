@@ -28,7 +28,7 @@ import TeamPanel from "@/components/panels/TeamPanel";
 import ResourcesPanel from "@/components/panels/ResourcesPanel";
 import { RoomTree } from "@/components/RoomTree";
 import { Omnibox } from "@/components/Omnibox";
-import { MapView } from "@/components/Map";
+import { GlobalMap } from "@/components/GlobalMap";
 
 type PanelType = "chat" | "memory" | "tasks" | "calendar" | "files" | "mindmap" | "signatures" | "notebook" | "log" | "profile" | "team" | "resources" | "map";
 
@@ -44,7 +44,7 @@ const panelConfig: { id: PanelType; icon: any; label: string; shortcut: string }
   { id: "signatures", icon: PenTool, label: "Signatures", shortcut: "^S" },
   { id: "notebook", icon: BookOpen, label: "Notebook", shortcut: "" },
   { id: "log", icon: ScrollText, label: "Log", shortcut: "^L" },
-  { id: "profile", icon: User, label: "Profile", shortcut: "" },
+  { id: "profile", icon: User, label: "Profile", shortcut: "^P" },
 ];
 
 export default function Workspace() {
@@ -56,7 +56,7 @@ export default function Workspace() {
   );
   const [createRoomOpen, setCreateRoomOpen] = useState(false);
   const [newRoomName, setNewRoomName] = useState("");
-  const [newRoomParentId, setNewRoomParentId] = useState<number | null>(null);
+  const [newRoomParentId, setNewRoomParentId] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const roomsQuery = trpc.rooms.list.useQuery(undefined, { enabled: !!user });
@@ -76,8 +76,8 @@ export default function Workspace() {
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         const map: Record<string, PanelType> = {
-          m: "memory", t: "team", k: "tasks", c: "calendar",
-          r: "resources", g: "map", x: "mindmap", s: "signatures", l: "log",
+          t: "team", g: "glossary" as any, p: "profile", n: "note" as any,
+          r: "resources", m: "memory", k: "tasks", c: "calendar", x: "mindmap",
         };
         const panel = map[e.key.toLowerCase()];
         if (panel) {
@@ -140,8 +140,8 @@ export default function Workspace() {
     switch (activePanel) {
       case "chat": return <ChatPanel {...props} />;
       case "team": return <TeamPanel />;
-      case "resources": return <ResourcesPanel {...props} />;
-      case "map": return <div className="h-full p-4"><MapView className="h-full rounded-lg border-2 border-border" /></div>;
+      case "resources": return <ResourcesPanel />;
+      case "map": return <GlobalMap />;
       case "memory": return <MemoryPanel {...props} />;
       case "tasks": return <TasksPanel {...props} />;
       case "calendar": return <CalendarPanel {...props} />;
@@ -216,7 +216,7 @@ export default function Workspace() {
               selectedRoomId={selectedRoomId} 
               onSelect={setSelectedRoomId} 
               onCreateSubroom={(parentId) => {
-                setNewRoomParentId(parentId);
+                setNewRoomParentId(parentId.toString());
                 setCreateRoomOpen(true);
               }}
             />
@@ -264,57 +264,25 @@ export default function Workspace() {
       </div>
 
       {/* Panel navigation strip */}
-      <div className="w-14 flex flex-col items-center py-2 gap-1 border-r border-border bg-background shrink-0">
-        {panelConfig.map((p) => (
+      <div className="w-14 flex flex-col border-r-2 border-border bg-background shrink-0">
+        {panelConfig.map((panel) => (
           <button
-            key={p.id}
-            onClick={() => setActivePanel(p.id)}
-            className={`w-10 h-10 flex flex-col items-center justify-center rounded transition-colors group relative ${
-              activePanel === p.id
-                ? "bg-primary/15 text-primary"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            key={panel.id}
+            onClick={() => setActivePanel(panel.id)}
+            className={`w-full aspect-square flex flex-col items-center justify-center gap-1 transition-all ${
+              activePanel === panel.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
             }`}
-            title={`${p.label}${p.shortcut ? ` (${p.shortcut})` : ""}`}
+            title={`${panel.label} (${panel.shortcut})`}
           >
-            <p.icon className="w-4 h-4" />
-            <span className="text-[8px] mt-0.5 font-mono leading-none">{p.label.slice(0, 4)}</span>
+            <panel.icon className="w-5 h-5" />
+            <span className="text-[8px] font-bold uppercase tracking-tighter">{panel.label}</span>
           </button>
         ))}
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar */}
-        <div className="h-14 flex items-center justify-between px-4 border-b-2 border-border shrink-0">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-sm uppercase tracking-wide text-foreground">
-              {panelConfig.find(p => p.id === activePanel)?.label || "Chat"}
-            </span>
-            {selectedRoomId && roomsQuery.data && (
-              <span className="text-xs text-muted-foreground font-mono">
-                // {roomsQuery.data.find(r => r.id === selectedRoomId)?.name || ""}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono text-muted-foreground hidden sm:block">
-              ^K (Search) · ^M ^T ^R ^G ^C ^F ^X ^S ^L
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={logout}
-              className="text-xs text-muted-foreground hover:text-destructive font-mono"
-            >
-              LOGOUT
-            </Button>
-          </div>
-        </div>
-
-        {/* Panel content */}
-        <div className="flex-1 overflow-hidden">
-          {renderPanel()}
-        </div>
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {renderPanel()}
       </div>
     </div>
   );

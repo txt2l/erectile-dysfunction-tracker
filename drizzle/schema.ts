@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, json, date } from "drizzle-orm/mysql-core";
 
 // ─── Users ───
 export const users = mysqlTable("users", {
@@ -10,7 +10,7 @@ export const users = mysqlTable("users", {
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   avatarUrl: text("avatarUrl"),
   bio: text("bio"),
-  location: text("location"), // Added location field
+  location: varchar("location", { length: 128 }), // Updated to match PDF (country/city)
   timezone: varchar("timezone", { length: 64 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -22,26 +22,23 @@ export type InsertUser = typeof users.$inferInsert;
 
 // ─── Profiles ───
 export const profiles = mysqlTable("profiles", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull().unique(),
-  birthdate: varchar("birthdate", { length: 64 }),
-  location: text("location"),
-  profession: text("profession"),
-  position: text("position"),
-  skills: text("skills"), // JSON string
-  interests: text("interests"),
-  quote: text("quote"),
-  websites: text("websites"),
-  socials: text("socials"),
-  coping: text("coping"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  userId: varchar("user_id", { length: 36 }).primaryKey(), // PDF: userId is PK, varchar(36)
+  birthdate: date("birthdate"), // PDF: date type
+  location: varchar("location", { length: 128 }), // PDF: varchar(128)
+  profession: varchar("profession", { length: 128 }), // PDF: varchar(128)
+  position: varchar("position", { length: 128 }), // PDF: varchar(128)
+  skills: json("skills"), // PDF: json type
+  interests: json("interests"), // PDF: json type
+  quote: varchar("quote", { length: 255 }), // PDF: varchar(255)
+  websites: json("websites"), // PDF: json type
+  socials: json("socials"), // PDF: json type
+  coping: text("coping"), // PDF: text type
 });
 
 // ─── Rooms ───
 export const rooms = mysqlTable("rooms", {
   id: int("id").autoincrement().primaryKey(),
-  parentId: int("parentId"), // Added parentId for nesting
+  parentId: varchar("parent_id", { length: 36 }), // PDF: parentId varchar(36)
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   createdBy: int("createdBy").notNull(),
@@ -84,7 +81,7 @@ export const memoryFiles = mysqlTable("memory_files", {
   title: varchar("title", { length: 500 }).notNull(),
   content: text("content"),
   tags: text("tags"),
-  metadata: text("metadata"), // Added metadata field
+  metadata: json("metadata"), // PDF: json type
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -206,44 +203,41 @@ export const notebooks = mysqlTable("notebooks", {
 
 // ─── Activity Log ───
 export const activityLogs = mysqlTable("activity_logs", {
-  id: varchar("id", { length: 36 }).primaryKey(), // Changed to UUID string
-  roomId: int("roomId"), // Made optional as some logs might be global
-  userId: int("userId").notNull(),
-  action: varchar("action", { length: 64 }).notNull(),
-  entityType: varchar("entityType", { length: 64 }),
-  entityId: int("entityId"),
-  metadata: text("metadata"), // Changed from details to metadata
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  id: varchar("id", { length: 36 }).primaryKey(), // PDF: varchar(36)
+  userId: varchar("user_id", { length: 36 }).notNull(), // PDF: user_id varchar(36)
+  action: varchar("action", { length: 64 }).notNull(), // PDF: varchar(64)
+  entityType: varchar("entity_type", { length: 64 }), // PDF: entity_type varchar(64)
+  entityId: varchar("entity_id", { length: 36 }), // PDF: entity_id varchar(36)
+  metadata: json("metadata"), // PDF: json type
+  createdAt: timestamp("created_at").defaultNow().notNull(), // PDF: created_at
 });
 
 // ─── Glossary ───
 export const glossary = mysqlTable("glossary", {
-  id: varchar("id", { length: 36 }).primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  definition: text("definition").notNull(),
-  attachments: text("attachments"), // JSON string of URLs
-  createdBy: int("createdBy").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  id: varchar("id", { length: 36 }).primaryKey(), // PDF: varchar(36)
+  name: varchar("name", { length: 128 }).notNull(), // PDF: varchar(128)
+  definition: varchar("definition", { length: 1000 }).notNull(), // PDF: varchar(1000)
+  attachments: json("attachments"), // PDF: json type
+  createdBy: varchar("created_by", { length: 36 }).notNull(), // PDF: varchar(36)
+  createdAt: timestamp("created_at").defaultNow().notNull(), // PDF: created_at
 });
 
 // ─── Connectors ───
 export const connectors = mysqlTable("connectors", {
-  id: varchar("id", { length: 36 }).primaryKey(),
-  userId: int("userId").notNull(),
-  type: varchar("type", { length: 64 }).notNull(),
-  config: text("config"), // JSON string
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  id: varchar("id", { length: 36 }).primaryKey(), // PDF: varchar(36)
+  userId: varchar("user_id", { length: 36 }).notNull(), // PDF: varchar(36)
+  type: varchar("type", { length: 64 }).notNull(), // PDF: varchar(64)
+  config: json("config"), // PDF: json type
+  createdAt: timestamp("created_at").defaultNow().notNull(), // PDF: created_at
 });
 
 // ─── Resources ───
 export const resources = mysqlTable("resources", {
-  id: int("id").autoincrement().primaryKey(),
-  roomId: int("roomId").notNull(),
-  title: varchar("title", { length: 255 }).notNull(),
-  url: text("url").notNull(),
-  category: varchar("category", { length: 64 }).default("general").notNull(), // e.g., "affiliate", "link", "tool"
-  description: text("description"),
-  createdBy: int("createdBy").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  id: varchar("id", { length: 36 }).primaryKey(), // PDF: varchar(36)
+  name: varchar("name", { length: 128 }).notNull(), // PDF: varchar(128)
+  url: text("url").notNull(), // PDF: text type
+  category: varchar("category", { length: 64 }), // PDF: varchar(64)
+  tags: json("tags"), // PDF: json type
+  createdBy: varchar("created_by", { length: 36 }).notNull(), // PDF: varchar(36)
+  createdAt: timestamp("created_at").defaultNow().notNull(), // PDF: created_at
 });

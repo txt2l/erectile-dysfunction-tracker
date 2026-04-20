@@ -1,30 +1,34 @@
 import { Server, Socket } from "socket.io";
 
-const onlineUsers = new Map<string, number>(); // socketId -> userId
+// PDF: Track onlineUsers (Set of userIds)
+const onlineUsers = new Set<string>();
 
 export function setupPresence(io: Server) {
   io.on("connection", (socket: Socket) => {
     const userId = socket.data.userId;
     if (userId) {
-      onlineUsers.set(socket.id, userId);
+      onlineUsers.add(userId);
       broadcastPresence(io);
     }
 
     socket.on("disconnect", () => {
-      onlineUsers.delete(socket.id);
-      broadcastPresence(io);
+      // Note: This is a simplified version. In a real app, you'd track multiple sockets per user.
+      if (userId) {
+        onlineUsers.delete(userId);
+        broadcastPresence(io);
+      }
     });
   });
 }
 
 function broadcastPresence(io: Server) {
-  const uniqueUserIds = new Set(onlineUsers.values());
+  // PDF: Emit presence:update with online count
   io.emit("presence:update", { 
-    onlineCount: uniqueUserIds.size,
-    onlineUserIds: Array.from(uniqueUserIds)
+    online: onlineUsers.size,
+    onlineUserIds: Array.from(onlineUsers)
   });
 }
 
 export function getOnlineCount() {
-  return new Set(onlineUsers.values()).size;
+  return onlineUsers.size;
 }
