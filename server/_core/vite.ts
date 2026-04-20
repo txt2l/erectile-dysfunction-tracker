@@ -50,7 +50,8 @@ export async function setupVite(app: Express, server: Server) {
 export function serveStatic(app: Express) {
   // In production, the server is bundled into dist/index.js
   // The static files are in dist/public
-  const distPath = path.resolve(import.meta.dirname, "public");
+  // Using process.cwd() ensures we resolve from the project root in production
+  const distPath = path.resolve(process.cwd(), "dist", "public");
   
   if (!fs.existsSync(distPath)) {
     console.error(
@@ -67,6 +68,12 @@ export function serveStatic(app: Express) {
     if (req.originalUrl.startsWith("/api")) {
       return res.status(404).json({ error: "Not Found" });
     }
-    res.sendFile(path.resolve(distPath, "index.html"));
+    
+    const indexPath = path.resolve(distPath, "index.html");
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).send("Not Found");
+    }
   });
 }
