@@ -5,24 +5,24 @@ import { useLocation } from "wouter";
 import {
   MessageSquare, Brain, CheckSquare, Calendar, FolderOpen,
   Network, PenTool, BookOpen, Languages, ArrowRight, Terminal,
-  Users, Search, Map as MapIcon, Library, ScrollText, UserCircle, Settings
+  Users, Search, Map as MapIcon, Library, ScrollText, UserCircle
 } from "lucide-react";
 
 const features = [
-  { icon: MessageSquare, label: "Real-time Chat", desc: "WebSocket-powered rooms with brutalist bubbles and instant delivery." },
-  { icon: Users, label: "Presence Tracking", desc: "See who's online instantly with real-time status indicators." },
-  { icon: UserCircle, label: "Team & Profiles", desc: "Detailed member directory with rich profiles and social links." },
-  { icon: Hash, label: "Nested Rooms", desc: "Organize conversations with hierarchical room and sub-room structures." },
-  { icon: Search, label: "Omnibox Search", desc: "Global command palette (Ctrl+K) to find rooms, members, and actions." },
-  { icon: Terminal, label: "Command Parser", desc: "Power-user shortcuts like ^T for Team, ^G for Glossary, and PM commands." },
-  { icon: BookOpen, label: "Glossary Modal", desc: "Centralized project dictionary for defining terms and sharing context." },
-  { icon: Brain, label: "Memory Bank", desc: "Store team knowledge with rich metadata and source tracking." },
-  { icon: MapIcon, label: "Isometric Map", desc: "Visual world map showing member locations and real-time connection lines." },
-  { icon: Library, label: "Resources Directory", desc: "Curated hub for external links, affiliate resources, and project tools." },
-  { icon: FolderOpen, label: "File Explorer", desc: "S3-backed storage with instant previews for media and documents." },
-  { icon: CheckSquare, label: "Tasks & To-Do", desc: "Full task management with priorities, assignees, and due dates." },
-  { icon: Calendar, label: "Shared Calendar", desc: "Team-wide scheduling and event tracking integrated with tasks." },
-  { icon: ScrollText, label: "Activity Log", desc: "Complete audit trail of every action, timestamped and searchable." },
+  { icon: Terminal, label: "1. Logging System", desc: "Everything timestamped and searchable audit trail." },
+  { icon: Users, label: "2. Presence Tracking", desc: "Real-time online/offline status for all members." },
+  { icon: UserCircle, label: "3. Profiles + Team", desc: "Detailed member directory with rich profiles." },
+  { icon: Hash, label: "4. Rooms Nesting", desc: "Organize conversations with hierarchical structures." },
+  { icon: Search, label: "5. Omnibox Search", desc: "Global command palette (Ctrl+K) for instant navigation." },
+  { icon: Terminal, label: "6. Command Parser", desc: "Power-user shortcuts like ^T, ^G, ^P, and PM commands." },
+  { icon: BookOpen, label: "7. Glossary Modal", desc: "Centralized project dictionary for defining terms." },
+  { icon: Brain, label: "8. Memory Metadata", desc: "Store team knowledge with rich source tracking." },
+  { icon: UserCircle, label: "9. Profile Modal", desc: "Right-click any user to view their full profile instantly." },
+  { icon: MessageSquare, label: "10. Clickable Media", desc: "In-context rendering for links, images, and video." },
+  { icon: MapIcon, label: "11. Isometric Map", desc: "Visual world map with real-time connection lines." },
+  { icon: Library, label: "12. Resources Page", desc: "Curated hub for links, affiliates, and project tools." },
+  { icon: FolderOpen, label: "13. File Explorer", desc: "S3-backed storage with instant media previews." },
+  { icon: CheckSquare, label: "14. Tasks & To-Do", desc: "Full task management with priorities and due dates." },
 ];
 
 function Hash({ className }: { className?: string }) {
