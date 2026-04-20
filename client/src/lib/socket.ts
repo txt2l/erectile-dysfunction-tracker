@@ -1,8 +1,18 @@
 import { io } from "socket.io-client";
 
-const socketUrl = import.meta.env.VITE_API_URL || window.location.origin;
+const getSocketUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) {
+    try {
+      return new URL(envUrl).origin;
+    } catch (e) {
+      console.warn("Invalid VITE_API_URL, falling back to origin:", envUrl);
+    }
+  }
+  return window.location.origin;
+};
 
-export const socket = io(socketUrl, {
+export const socket = io(getSocketUrl(), {
   path: "/api/socket.io",
   autoConnect: true,
   withCredentials: true,
