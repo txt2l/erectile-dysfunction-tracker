@@ -4,30 +4,60 @@ import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
 import {
   MessageSquare, Brain, CheckSquare, Calendar, FolderOpen,
-  Network, PenTool, BookOpen, Languages, ArrowRight, Terminal
+  Network, PenTool, BookOpen, Languages, ArrowRight, Terminal,
+  Users, Search, Map as MapIcon, Library, ScrollText, UserCircle, Settings
 } from "lucide-react";
 
 const features = [
-  { icon: MessageSquare, label: "Real-time Chat", desc: "WebSocket-powered rooms with brutalist bubbles" },
-  { icon: Brain, label: "Memory Bank", desc: "Store, organize, and search team knowledge" },
-  { icon: CheckSquare, label: "Tasks & To-Do", desc: "Assignees, priorities, due dates, drag-and-drop" },
-  { icon: Calendar, label: "Shared Calendar", desc: "Team scheduling with event creation" },
-  { icon: FolderOpen, label: "File Explorer", desc: "S3-backed file storage with previews" },
-  { icon: Network, label: "Mindmap Canvas", desc: "Visual brainstorming with nodes and connections" },
-  { icon: PenTool, label: "Digital Signatures", desc: "Create, store, and sign documents" },
-  { icon: BookOpen, label: "Notebook", desc: "Rich Markdown notes with graph-paper aesthetic" },
-  { icon: Languages, label: "AI Translation", desc: "Dev↔casual and JP↔EN in-context" },
-  { icon: Terminal, label: "Activity Log", desc: "Everything timestamped and searchable" },
+  { icon: MessageSquare, label: "Real-time Chat", desc: "WebSocket-powered rooms with brutalist bubbles and instant delivery." },
+  { icon: Users, label: "Presence Tracking", desc: "See who's online instantly with real-time status indicators." },
+  { icon: UserCircle, label: "Team & Profiles", desc: "Detailed member directory with rich profiles and social links." },
+  { icon: Hash, label: "Nested Rooms", desc: "Organize conversations with hierarchical room and sub-room structures." },
+  { icon: Search, label: "Omnibox Search", desc: "Global command palette (Ctrl+K) to find rooms, members, and actions." },
+  { icon: Terminal, label: "Command Parser", desc: "Power-user shortcuts like ^T for Team, ^G for Glossary, and PM commands." },
+  { icon: BookOpen, label: "Glossary Modal", desc: "Centralized project dictionary for defining terms and sharing context." },
+  { icon: Brain, label: "Memory Bank", desc: "Store team knowledge with rich metadata and source tracking." },
+  { icon: MapIcon, label: "Isometric Map", desc: "Visual world map showing member locations and real-time connection lines." },
+  { icon: Library, label: "Resources Directory", desc: "Curated hub for external links, affiliate resources, and project tools." },
+  { icon: FolderOpen, label: "File Explorer", desc: "S3-backed storage with instant previews for media and documents." },
+  { icon: CheckSquare, label: "Tasks & To-Do", desc: "Full task management with priorities, assignees, and due dates." },
+  { icon: Calendar, label: "Shared Calendar", desc: "Team-wide scheduling and event tracking integrated with tasks." },
+  { icon: ScrollText, label: "Activity Log", desc: "Complete audit trail of every action, timestamped and searchable." },
 ];
+
+function Hash({ className }: { className?: string }) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width="24" 
+      height="24" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      <line x1="4" y1="9" x2="20" y2="9"></line>
+      <line x1="4" y1="15" x2="20" y2="15"></line>
+      <line x1="10" y1="3" x2="8" y2="21"></line>
+      <line x1="16" y1="3" x2="14" y2="21"></line>
+    </svg>
+  );
+}
 
 export default function Home() {
   const { user, loading } = useAuth();
   const [, setLocation] = useLocation();
 
-  if (user) {
-    setLocation("/workspace");
-    return null;
-  }
+  const handleEnter = () => {
+    if (user) {
+      setLocation("/workspace");
+    } else {
+      window.location.href = getLoginUrl();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -59,18 +89,18 @@ export default function Home() {
             </p>
 
             <p className="text-sm text-muted-foreground font-mono mb-10 max-w-xl">
-              Chat + shared memory, tasks, calendar, files, mindmap, signatures —
-              all wired through a single backend with AI as the language mediator.
+              14 core modules wired through a single backend with AI as the language mediator.
+              Everything your startup needs in one terminal.
             </p>
 
             <div className="flex flex-wrap gap-4">
               <Button
                 size="lg"
-                onClick={() => { window.location.href = getLoginUrl(); }}
+                onClick={handleEnter}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider px-8 h-12 text-sm"
                 disabled={loading}
               >
-                {loading ? "Loading..." : "Enter Workspace"}
+                {loading ? "Loading..." : user ? "Go to Workspace" : "Enter Workspace"}
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </div>
@@ -86,11 +116,11 @@ export default function Home() {
               // SYSTEM MODULES
             </h2>
             <p className="text-3xl font-bold tracking-tight">
-              Everything your startup needs in one terminal.
+              The 14-Feature Roadmap Implementation.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {features.map((f) => (
               <div
                 key={f.label}
