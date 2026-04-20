@@ -234,3 +234,16 @@ export const connectors = mysqlTable("connectors", {
   config: text("config"), // JSON string
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
+
+// ─── Resources ───
+export const resources = mysqlTable("resources", {
+  id: int("id").autoincrement().primaryKey(),
+  roomId: int("roomId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  url: text("url").notNull(),
+  category: varchar("category", { length: 64 }).default("general").notNull(), // e.g., "affiliate", "link", "tool"
+  description: text("description"),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});

@@ -230,4 +230,42 @@ export const appRouter = router({
       return { id };
     }),
   }),
+
+  // ─── Resources ───
+  resources: router({
+    list: protectedProcedure.input(z.object({ roomId: z.number() })).query(async ({ input }) => {
+      return db.getRoomResources(input.roomId);
+    }),
+    create: protectedProcedure.input(z.object({
+      roomId: z.number(),
+      title: z.string().min(1),
+      url: z.string().url(),
+      category: z.string().optional(),
+      description: z.string().optional(),
+    })).mutation(async ({ ctx, input }) => {
+      const id = await db.createResource(input.roomId, ctx.user.id, {
+        title: input.title,
+        url: input.url,
+        category: input.category ?? "general",
+        description: input.description,
+      });
+      await logEvent({ userId: ctx.user.id, roomId: input.roomId, action: "resource_added", metadata: { title: input.title } });
+      return { id };
+    }),
+    update: protectedProcedure.input(z.object({
+      id: z.number(),
+      title: z.string().optional(),
+      url: z.string().url().optional(),
+      category: z.string().optional(),
+      description: z.string().optional(),
+    })).mutation(async ({ ctx, input }) => {
+      const { id, ...data } = input;
+      await db.updateResource(id, data);
+      return { success: true };
+    }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ ctx, input }) => {
+      await db.deleteResource(input.id);
+      return { success: true };
+    }),
+  }),
 });

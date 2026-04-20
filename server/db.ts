@@ -395,3 +395,33 @@ export async function getRoomActivityLogs(roomId: number) {
   if (!db) return [];
   return db.select().from(activityLogs).where(eq(activityLogs.roomId, roomId)).orderBy(desc(activityLogs.createdAt)).limit(100);
 }
+
+// ─── Resources ───
+export async function getRoomResources(roomId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(schema.resources).where(eq(schema.resources.roomId, roomId)).orderBy(desc(schema.resources.createdAt));
+}
+
+export async function createResource(roomId: number, userId: number, data: { title: string; url: string; category: string; description?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const [result] = await db.insert(schema.resources).values({
+    roomId,
+    createdBy: userId,
+    ...data,
+  }).$returningId();
+  return result.id;
+}
+
+export async function updateResource(id: number, data: Partial<{ title: string; url: string; category: string; description: string }>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(schema.resources).set(data).where(eq(schema.resources.id, id));
+}
+
+export async function deleteResource(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(schema.resources).where(eq(schema.resources.id, id));
+}
