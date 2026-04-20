@@ -7,7 +7,7 @@ import { useParams } from "wouter";
 import {
   MessageSquare, Brain, CheckSquare, Calendar, FolderOpen,
   Network, PenTool, BookOpen, ScrollText, User, Plus, Hash,
-  Loader2, ChevronLeft, Users, Search
+  Loader2, ChevronLeft, Users, Search, Map as MapIcon, Library
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -25,18 +25,21 @@ import NotebookPanel from "@/components/panels/NotebookPanel";
 import ActivityLogPanel from "@/components/panels/ActivityLogPanel";
 import ProfilePanel from "@/components/panels/ProfilePanel";
 import TeamPanel from "@/components/panels/TeamPanel";
+import ResourcesPanel from "@/components/panels/ResourcesPanel";
 import { RoomTree } from "@/components/RoomTree";
 import { Omnibox } from "@/components/Omnibox";
+import { MapView } from "@/components/Map";
 
-type PanelType = "chat" | "memory" | "tasks" | "calendar" | "files" | "mindmap" | "signatures" | "notebook" | "log" | "profile" | "team";
+type PanelType = "chat" | "memory" | "tasks" | "calendar" | "files" | "mindmap" | "signatures" | "notebook" | "log" | "profile" | "team" | "resources" | "map";
 
 const panelConfig: { id: PanelType; icon: any; label: string; shortcut: string }[] = [
   { id: "chat", icon: MessageSquare, label: "Chat", shortcut: "" },
   { id: "team", icon: Users, label: "Team", shortcut: "^T" },
+  { id: "resources", icon: Library, label: "Resources", shortcut: "^R" },
+  { id: "map", icon: MapIcon, label: "Map", shortcut: "^G" },
   { id: "memory", icon: Brain, label: "Memory", shortcut: "^M" },
   { id: "tasks", icon: CheckSquare, label: "Tasks", shortcut: "^K" },
   { id: "calendar", icon: Calendar, label: "Calendar", shortcut: "^C" },
-  { id: "files", icon: FolderOpen, label: "Files", shortcut: "^F" },
   { id: "mindmap", icon: Network, label: "Mindmap", shortcut: "^X" },
   { id: "signatures", icon: PenTool, label: "Signatures", shortcut: "^S" },
   { id: "notebook", icon: BookOpen, label: "Notebook", shortcut: "" },
@@ -74,7 +77,7 @@ export default function Workspace() {
       if (e.ctrlKey || e.metaKey) {
         const map: Record<string, PanelType> = {
           m: "memory", t: "team", k: "tasks", c: "calendar",
-          f: "files", x: "mindmap", s: "signatures", l: "log",
+          r: "resources", g: "map", x: "mindmap", s: "signatures", l: "log",
         };
         const panel = map[e.key.toLowerCase()];
         if (panel) {
@@ -123,7 +126,7 @@ export default function Workspace() {
   }
 
   const renderPanel = () => {
-    if (!selectedRoomId && activePanel !== "team" && activePanel !== "profile") {
+    if (!selectedRoomId && !["team", "profile", "map", "resources"].includes(activePanel)) {
       return (
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
           <div className="text-center space-y-4">
@@ -137,6 +140,8 @@ export default function Workspace() {
     switch (activePanel) {
       case "chat": return <ChatPanel {...props} />;
       case "team": return <TeamPanel />;
+      case "resources": return <ResourcesPanel {...props} />;
+      case "map": return <div className="h-full p-4"><MapView className="h-full rounded-lg border-2 border-border" /></div>;
       case "memory": return <MemoryPanel {...props} />;
       case "tasks": return <TasksPanel {...props} />;
       case "calendar": return <CalendarPanel {...props} />;
@@ -293,7 +298,7 @@ export default function Workspace() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-mono text-muted-foreground hidden sm:block">
-              ^K (Search) · ^M ^T ^C ^F ^X ^S ^L
+              ^K (Search) · ^M ^T ^R ^G ^C ^F ^X ^S ^L
             </span>
             <Button
               variant="ghost"
