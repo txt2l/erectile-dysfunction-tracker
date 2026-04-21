@@ -7,39 +7,40 @@
 **Architecture**: Unified Full-Stack (CommonJS Express + Vite SPA)
 - **Frontend**: React 19 + Tailwind 4 (Vite)
 - **Backend**: Node.js (Express + CommonJS)
-- **Deployment**: Railway (Single Service)
+- **Deployment**: Railway (Single Service via Nixpacks)
 
 ---
 
 ## Critical Fixes Applied (April 2026) ✅
 
-### 1. CommonJS Recovery (Railway Crash Fix)
-- **Issue**: Persistent crashes due to ESM/Require conflicts ("require is not defined" or "Dynamic require" errors).
+### 1. Railway + Nixpacks Lock-in
+- **Issue**: Railway switching between builders and Node version mismatches.
+- **Fix**: Created `railway.toml` and `nixpacks.toml` to force the **NIXPACKS** builder and **Node 22**.
+- **pnpm Enforcement**: Configured Nixpacks to use `pnpm` exclusively for all phases (setup, install, build).
+- **Version Control**: Added `.node-version` (22) and `.npmrc` (`engine-strict=true`) to strictly enforce the environment.
+
+### 2. CommonJS Recovery (Railway Crash Fix)
+- **Issue**: Persistent crashes due to ESM/Require conflicts.
 - **Fix**: Converted the backend to a pure CommonJS architecture.
     *   Removed `"type": "module"` from `package.json`.
     *   Updated `tsconfig.json` to force `CommonJS` output.
-    *   Replaced `esbuild` with `tsup` for a reliable CommonJS server bundle (`dist/server.js`).
-    *   Updated server files (`server/app.ts`, `server/index.ts`) to use standard `require()` and `module.exports`.
+    *   Used `tsup` for a reliable CommonJS server bundle (`dist/server.js`).
 
-### 2. Static Path Resolution
+### 3. Static Path Resolution
 - **Issue**: "Not Found" errors because the server couldn't locate the frontend build.
 - **Fix**: Standardized on `path.join(process.cwd(), "dist/client")` for all static serving and SPA fallback logic.
 - **Verification**: Added `console.log("CLIENT EXISTS:", fs.existsSync(...))` to the server startup to confirm the build is detected at runtime.
-
-### 3. Build Pipeline Alignment
-- **Vite Config**: Updated `vite.config.ts` to explicitly set `outDir: "dist/client"`.
-- **Package Scripts**:
-  - `build`: `vite build && tsup server/index.ts --out-dir dist --format cjs --minify --entry.server server/index.ts`
-  - `start`: `node dist/server.js`
 
 ---
 
 ## Railway Deployment Configuration 🚀
 
 ### 1. Build & Start Commands
-Railway is configured via `railway.json` to use the following:
+Railway is configured via `railway.toml` and `nixpacks.toml`:
 - **Builder**: `NIXPACKS`
-- **Build Command**: `npm install && npm run build`
+- **Node Version**: `22`
+- **Package Manager**: `pnpm`
+- **Build Command**: `pnpm build`
 - **Start Command**: `node dist/server.js`
 
 ### 2. Required Secrets (Set in Railway Dashboard)
@@ -88,28 +89,11 @@ Ensure the following environment variables are set:
 | `server/index.ts` | Main server entry point |
 | `server/app.ts` | **CRITICAL**: Handles static file serving and SPA fallback |
 | `vite.config.ts` | **CRITICAL**: Defines frontend build output path (`dist/client`) |
-| `railway.json` | **CRITICAL**: Railway deployment configuration |
-| `server/routers.ts` | All tRPC API procedures |
+| `railway.toml` | **CRITICAL**: Railway deployment configuration |
+| `nixpacks.toml` | **CRITICAL**: Nixpacks environment and build phases |
+| `.node-version` | Forces Node 22 |
 
 ---
 
-## Development Workflow
-
-```bash
-# Install
-pnpm install
-
-# Dev (Hot Reload)
-pnpm dev
-
-# Build (Production)
-pnpm build
-
-# Start (Production)
-pnpm start
-```
-
----
-
-**Final Checkpoint**: `d0cbe6a` (Railway Deployment Ready)
+**Final Checkpoint**: `c0b35f1` (Nixpacks + Node 22 Locked)
 **Status**: Ready for Production 🚀
