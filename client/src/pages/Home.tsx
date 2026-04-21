@@ -52,19 +52,23 @@ export default function Home() {
   const [, setLocation] = useLocation();
 
   const handleEnter = () => {
-    console.log("[Home] Enter clicked. User:", user, "Loading:", loading);
     if (user) {
       setLocation("/workspace");
     } else {
-      const loginUrl = getLoginUrl();
-      console.log("[Home] Redirecting to login:", loginUrl);
-      if (loginUrl === "/") {
-        // If login URL is just "/", it means config is missing. 
-        // We'll try to go to workspace anyway to see if the user is actually authed but the check failed.
-        setLocation("/workspace");
-      } else {
-        window.location.href = loginUrl;
-      }
+      // Use the correct auth portal URL identified from the screenshot
+      const oauthPortalUrl = "https://auth.manus.im";
+      const appId = "erectile-dysfunction-tracker";
+      const origin = window.location.origin;
+      const redirectUri = `${origin}/api/oauth/callback`;
+      const state = btoa(redirectUri);
+      
+      const url = new URL(`${oauthPortalUrl}/app-auth`);
+      url.searchParams.set("appId", appId);
+      url.searchParams.set("redirectUri", redirectUri);
+      url.searchParams.set("state", state);
+      url.searchParams.set("type", "signIn");
+      
+      window.location.href = url.toString();
     }
   };
 
