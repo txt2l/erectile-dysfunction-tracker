@@ -53,11 +53,11 @@ export function serveStatic(app: Express) {
 
   console.log(`[Static] Serving files from: ${distPath}`);
 
-  // Serve static files from the resolved directory
+  // 1. SERVE STATIC FRONTEND
   app.use(express.static(distPath, { index: false }));
 
-  // Fall through to index.html for all other routes (SPA support)
-  app.use("*", (req, res) => {
+  // 2. SPA FALLBACK ROUTE (CRITICAL FIX)
+  app.get("*", (req, res) => {
     // Skip API routes
     if (req.originalUrl.startsWith("/api")) {
       return res.status(404).json({ error: "Not Found" });
@@ -66,20 +66,8 @@ export function serveStatic(app: Express) {
     const indexPath = path.resolve(distPath, "index.html");
     
     if (fs.existsSync(indexPath)) {
-      // In production, we inject environment variables into the HTML
-      // so the frontend can access them even if they weren't present at build time.
-      let html = fs.readFileSync(indexPath, "utf-8");
-      
-      const envConfig = {
-        VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_SERVER_URL,
-        VITE_APP_ID: process.env.VITE_APP_ID,
-        VITE_API_URL: process.env.VITE_API_URL,
-      };
-
-      const injection = `<script>window.ENV_INJECTED = ${JSON.stringify(envConfig)};</script>`;
-      html = html.replace("<head>", `<head>${injection}`);
-      
-      res.send(html);
+      // Use sendFile as per schema for robust SPA routing
+      res.sendFile(indexPath);
     } else {
       console.error(`[Static] index.html not found at: ${indexPath}`);
       res.status(404).send(`Not Found: ${req.originalUrl} (Static path: ${distPath})`);
