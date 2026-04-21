@@ -1,12 +1,8 @@
-nixVersion = 'latest'
-nixpkgsArchive = 'github:NixOS/nixpkgs/ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7'
-providers = ['node']
-
 [phases.setup]
 nixPkgs = ['nodejs_22', 'caddy', 'openssl']
 
 [phases.install]
-cmds = ['npm install']
+cmds = ['npm install'] # Force npm, ignore pnpm-lock
 
 [phases.build]
 cmds = ['npm run build']
