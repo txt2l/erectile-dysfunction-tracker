@@ -4,12 +4,23 @@ export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 export const getLoginUrl = () => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;
-  const redirectUri = `${window.location.origin}/api/oauth/callback`;
-  const state = btoa(redirectUri);
+  
+  // Use a safe fallback for redirectUri to avoid potential issues with window.location.origin
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const redirectUri = `${origin}/api/oauth/callback`;
+  
+  // Defensive base64 encoding
+  let state = "";
+  try {
+    state = btoa(redirectUri);
+  } catch (e) {
+    console.error("Failed to encode redirectUri:", e);
+  }
 
   if (!oauthPortalUrl) {
-    console.warn("VITE_OAUTH_PORTAL_URL is not defined");
-    return "/login-error?reason=missing_oauth_url";
+    console.warn("VITE_OAUTH_PORTAL_URL is not defined. Please set it in your environment variables.");
+    // Return a safe fallback instead of a route that might not exist
+    return "/";
   }
 
   try {
@@ -20,7 +31,7 @@ export const getLoginUrl = () => {
     url.searchParams.set("type", "signIn");
     return url.toString();
   } catch (e) {
-    console.error("Invalid OAuth Portal URL:", oauthPortalUrl);
-    return "/login-error?reason=invalid_oauth_url";
+    console.error("Invalid OAuth Portal URL:", oauthPortalUrl, e);
+    return "/";
   }
 };

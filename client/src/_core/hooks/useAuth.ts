@@ -66,9 +66,11 @@ export function useAuth(options?: UseAuthOptions) {
     if (state.user) return;
     if (typeof window === "undefined") return;
     const finalRedirectPath = redirectPath || getLoginUrl();
-    if (window.location.pathname === finalRedirectPath) return;
+    
+    // Only redirect if the path is different and not the home page (to avoid loops)
+    if (window.location.href === finalRedirectPath || (finalRedirectPath === "/" && window.location.pathname === "/")) return;
 
-    window.location.href = finalRedirectPath
+    window.location.href = finalRedirectPath;
   }, [
     redirectOnUnauthenticated,
     redirectPath,
