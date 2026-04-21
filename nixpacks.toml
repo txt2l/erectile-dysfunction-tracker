@@ -1,17 +1,5 @@
 [phases.setup]
-nixPkgs = ["nodejs_22"]
+nixPkgs = ["nodejs_22", "openssl"]
 
 [phases.install]
-cmds = [
-"npm install -g corepack",
-"corepack enable",
-"pnpm install --frozen-lockfile"
-]
-
-[phases.build]
-cmds = [
-"pnpm build"
-]
-
-[start]
-cmd = "node dist/server.js"
+cmds = ["npm install -g pnpm", "pnpm install"]
