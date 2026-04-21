@@ -50,33 +50,9 @@ export async function setupVite(app: Express, server: Server) {
 export function serveStatic(app: Express) {
   // In production, the server is bundled into dist/index.js
   // The static files are in dist/public
-  // We try multiple ways to resolve the path to be extremely robust
-  const pathsToTry = [
-    path.resolve(process.cwd(), "dist", "public"),
-    path.resolve(process.cwd(), "public"),
-    path.resolve(import.meta.dirname, "public"),
-    path.resolve(import.meta.dirname, "..", "public"),
-    path.resolve(import.meta.dirname, "..", "..", "client", "dist"),
-  ];
+  const distPath = path.resolve(process.cwd(), "dist", "public");
 
-  let distPath = "";
-  for (const p of pathsToTry) {
-    console.log(`[Static] Checking path: ${p}`);
-    if (fs.existsSync(p) && fs.existsSync(path.join(p, "index.html"))) {
-      distPath = p;
-      break;
-    }
-  }
-
-  if (!distPath) {
-    console.error(
-      `Could not find the build directory in any of: ${pathsToTry.join(", ")}`
-    );
-    // Fallback to the first one just in case
-    distPath = pathsToTry[0];
-  } else {
-    console.log(`[Static] Serving files from: ${distPath}`);
-  }
+  console.log(`[Static] Serving files from: ${distPath}`);
 
   // Serve static files from the resolved directory
   app.use(express.static(distPath, { index: false }));
@@ -89,7 +65,6 @@ export function serveStatic(app: Express) {
     }
     
     const indexPath = path.resolve(distPath, "index.html");
-    console.log(`[Static] Serving index.html from: ${indexPath} for URL: ${req.originalUrl}`);
     
     if (fs.existsSync(indexPath)) {
       // In production, we inject environment variables into the HTML
@@ -107,7 +82,8 @@ export function serveStatic(app: Express) {
       
       res.send(html);
     } else {
-      res.status(404).send(`Not Found: ${req.originalUrl} (Static path: ${distPath}, Index path: ${indexPath})`);
+      console.error(`[Static] index.html not found at: ${indexPath}`);
+      res.status(404).send(`Not Found: ${req.originalUrl} (Static path: ${distPath})`);
     }
   });
 }
