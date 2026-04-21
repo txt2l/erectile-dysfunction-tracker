@@ -56,7 +56,7 @@ export default function Home() {
       setLocation("/workspace");
     } else {
       // Use the correct auth portal URL identified from the screenshot
-      const oauthPortalUrl = "https://auth.manus.im";
+      const oauthPortalUrl = "https://manus.im/auth";
       const appId = "erectile-dysfunction-tracker";
       const origin = window.location.origin;
       const redirectUri = `${origin}/api/oauth/callback`;
