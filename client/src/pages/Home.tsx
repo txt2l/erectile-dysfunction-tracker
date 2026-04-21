@@ -52,10 +52,19 @@ export default function Home() {
   const [, setLocation] = useLocation();
 
   const handleEnter = () => {
+    console.log("[Home] Enter clicked. User:", user, "Loading:", loading);
     if (user) {
       setLocation("/workspace");
     } else {
-      window.location.href = getLoginUrl();
+      const loginUrl = getLoginUrl();
+      console.log("[Home] Redirecting to login:", loginUrl);
+      if (loginUrl === "/") {
+        // If login URL is just "/", it means config is missing. 
+        // We'll try to go to workspace anyway to see if the user is actually authed but the check failed.
+        setLocation("/workspace");
+      } else {
+        window.location.href = loginUrl;
+      }
     }
   };
 

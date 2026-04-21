@@ -19,8 +19,8 @@ export const getLoginUrl = () => {
 
   if (!oauthPortalUrl) {
     console.warn("VITE_OAUTH_PORTAL_URL is not defined. Please set it in your environment variables.");
-    // Return a safe fallback instead of a route that might not exist
-    return "/";
+    // Return a specific error path that we can handle in the frontend
+    return "/login-error?reason=missing_oauth_url";
   }
 
   try {
