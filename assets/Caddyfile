@@ -1,3 +1,0 @@
-chatroomlm.liphe.org {
-  reverse_proxy localhost:{$PORT}
-}
