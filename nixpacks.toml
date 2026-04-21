@@ -1,11 +1,12 @@
 [phases.setup]
-nixPkgs = ['nodejs-22', 'pnpm_9', 'openssl', 'caddy']
+onlyIncludeFiles = []
+nixPkgs = ['nodejs_22', 'pnpm_9', 'openssl', 'caddy']
 
 [phases.install]
-cmds = ["pnpm install"]
+cmds = ['pnpm install']
 
 [phases.build]
-cmds = ["pnpm run build"]
+cmds = ['npm install && npm run build']
 
-[start]
-cmd = "node dist/server.js"
+[phases.start]
+cmd = 'node dist/server.js'
