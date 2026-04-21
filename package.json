@@ -12,6 +12,7 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
+    "preview": "vite preview",
     "db:push": "drizzle-kit generate && drizzle-kit migrate"
   },
   "dependencies": {

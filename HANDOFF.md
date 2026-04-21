@@ -2,53 +2,47 @@
 
 ## Project Status
 
-**Current State**: MVP with all 11 panels functional, real-time chat, AI translation, and Railway-optimized deployment.
+**Current State**: MVP with all 11 panels functional, real-time chat, AI translation, and Docker-optimized deployment.
 
 **Architecture**: Unified Full-Stack (CommonJS Express + Vite SPA)
 - **Frontend**: React 19 + Tailwind 4 (Vite)
 - **Backend**: Node.js (Express + CommonJS)
-- **Deployment**: Railway (Single Service via Nixpacks)
+- **Deployment**: Railway (Docker-based with Caddy Reverse Proxy)
 
 ---
 
 ## Critical Fixes Applied (April 2026) ✅
 
-### 1. Railway + Nixpacks Lock-in (npm Migration)
+### 1. Docker + Caddy Migration
+- **Issue**: Transitioning from Nixpacks to a more robust Docker-based deployment with a reverse proxy.
+- **Fix**: Implemented a multi-stage `Dockerfile` and a `Caddyfile` for reverse proxying.
+- **Caddy Configuration**: Caddy handles HTTPS (on Railway) and reverse proxies traffic to the Node.js server running on port 3000.
+- **Build Process**: Multi-stage Docker build ensures a small final image with only necessary production artifacts.
+
+### 2. Railway + Nixpacks Lock-in (npm Migration)
 - **Issue**: Railway switching between builders and Node version mismatches. pnpm was causing Nix derivation failures.
-- **Fix**: Created `railway.toml` and `nixpacks.toml` to force the **NIXPACKS** builder and **Node 22**.
-- **npm Enforcement**: Migrated from `pnpm` to `npm` for better stability on Railway. Deleted all `pnpm-lock.yaml` files and generated a fresh `package-lock.json`.
+- **Fix**: Migrated from `pnpm` to `npm` for better stability. Generated a fresh `package-lock.json`.
 - **Version Control**: Added `.node-version` (22) and `.npmrc` (`engine-strict=true`) to strictly enforce the environment.
 
-### 2. CommonJS Recovery (Railway Crash Fix)
+### 3. CommonJS Recovery (Railway Crash Fix)
 - **Issue**: Persistent crashes due to ESM/Require conflicts.
 - **Fix**: Converted the backend to a pure CommonJS architecture.
     *   Removed `"type": "module"` from `package.json`.
     *   Updated `tsconfig.json` to force `CommonJS` output.
     *   Used `tsup` for a reliable CommonJS server bundle (`dist/server.js`).
 
-### 3. Static Path Resolution & SPA Routing
+### 4. Static Path Resolution & SPA Routing
 - **Issue**: "Not Found" errors because the server couldn't locate the frontend build or handle deep routes.
 - **Fix**: Standardized on `path.join(process.cwd(), "dist/client")` for all static serving and SPA fallback logic.
-- **Verification**: Added `console.log("CLIENT EXISTS:", fs.existsSync(...))` to the server startup to confirm the build is detected at runtime.
-
-### 4. Authentication & Branding Cleanup
-- **Issue**: "Missing session cookie" errors and Manus-specific branding.
-- **Fix**: 
-    *   Verified cookie settings in `server/_core/cookies.ts` for Railway/HTTPS compatibility.
-    *   Removed `ManusDialog.tsx` and all "Manus" branding from the codebase and documentation.
-    *   Ensured `withCredentials: true` is set in the Socket.IO client for session persistence.
 
 ---
 
 ## Railway Deployment Configuration 🚀
 
-### 1. Build & Start Commands
-Railway is configured via `railway.toml` and `nixpacks.toml`:
-- **Builder**: `NIXPACKS`
-- **Node Version**: `22`
-- **Package Manager**: `npm`
-- **Build Command**: `npm run build`
-- **Start Command**: `node dist/server.js`
+### 1. Docker Deployment
+Railway will automatically detect the `Dockerfile` in the root directory and use it for deployment, ignoring Nixpacks.
+- **Exposed Ports**: 3000 (Node), 80 (Caddy)
+- **Start Command**: `caddy run --config /etc/caddy/Caddyfile --adapter caddyfile`
 
 ### 2. Required Secrets (Set in Railway Dashboard)
 Ensure the following environment variables are set:
@@ -66,25 +60,20 @@ Ensure the following environment variables are set:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Frontend (React 19 + Tailwind 4)                            │
-│ /client/src/                                                │
-│ ├── App.tsx (Main App)                                      │
-│ └── main.tsx (Entry Point)                                  │
-└──────────────────────────┬──────────────────────────────────┘
-                           │ HTTP + WebSocket
-┌──────────────────────────▼──────────────────────────────────┐
-│ Unified Backend (Express + CommonJS)                        │
+│ Caddy Reverse Proxy (Port 80)                               │
+└───────────────┬─────────────────────────────────────────────┘
+                │ Proxy to localhost:3000
+┌───────────────▼─────────────────────────────────────────────┐
+│ Unified Backend (Express + CommonJS) (Port 3000)            │
 │ /server/                                                    │
 │ ├── index.ts (Entry Point)                                  │
 │ ├── app.ts (Express Setup & SPA Fallback)                   │
-│ ├── routers.ts (API Logic)                                  │
 │ └── db.ts (Database Helpers)                                │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-        ┌──────────────────┼──────────────────┐
-        │                  │                  │
-    MySQL DB           S3 Storage        LLM API
-  (Railway/TiDB)     (AWS S3)         (OpenAI-compatible)
+└───────────────┬─────────────────────────────────────────────┘
+                │
+        ┌───────┼───────┐
+        │       │       │
+    MySQL DB  S3 Storage  LLM API
 ```
 
 ---
@@ -93,15 +82,13 @@ Ensure the following environment variables are set:
 
 | File | Purpose |
 |------|---------|
-| `server/index.ts` | Main server entry point |
-| `server/app.ts` | **CRITICAL**: Handles static file serving and SPA fallback |
-| `vite.config.ts` | **CRITICAL**: Defines frontend build output path (`dist/client`) |
-| `railway.toml` | **CRITICAL**: Railway deployment configuration |
-| `nixpacks.toml` | **CRITICAL**: Nixpacks environment and build phases |
-| `package-lock.json` | **CRITICAL**: Fresh npm lockfile for stable builds |
+| `Dockerfile` | **CRITICAL**: Multi-stage Docker build configuration |
+| `assets/Caddyfile` | **CRITICAL**: Caddy reverse proxy configuration |
+| `server/app.ts` | Handles static file serving and SPA fallback |
+| `package-lock.json` | Fresh npm lockfile for stable builds |
 | `.node-version` | Forces Node 22 |
 
 ---
 
-**Final Checkpoint**: `npm-stable-v1` (Nixpacks + Node 22 + npm)
+**Final Checkpoint**: `docker-caddy-v1` (Docker + Caddy + Node 22)
 **Status**: Ready for Production 🚀
