@@ -88,7 +88,20 @@ export function serveStatic(app: Express) {
     
     const indexPath = path.resolve(distPath, "index.html");
     if (fs.existsSync(indexPath)) {
-      res.sendFile(indexPath);
+      // In production, we inject environment variables into the HTML
+      // so the frontend can access them even if they weren't present at build time.
+      let html = fs.readFileSync(indexPath, "utf-8");
+      
+      const envConfig = {
+        VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_SERVER_URL,
+        VITE_APP_ID: process.env.VITE_APP_ID,
+        VITE_API_URL: process.env.VITE_API_URL,
+      };
+
+      const injection = `<script>window.ENV_INJECTED = ${JSON.stringify(envConfig)};</script>`;
+      html = html.replace("<head>", `<head>${injection}`);
+      
+      res.send(html);
     } else {
       res.status(404).send(`Not Found: ${req.originalUrl} (Static path: ${distPath})`);
     }
