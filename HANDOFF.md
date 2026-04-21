@@ -34,6 +34,26 @@
 
 ---
 
+## Railway Deployment Configuration 🚀
+
+### 1. Build & Start Commands
+Railway is configured via `railway.json` to use the following:
+- **Builder**: `NIXPACKS`
+- **Build Command**: `npm install && npm run build`
+- **Start Command**: `node dist/server.js`
+
+### 2. Required Secrets (Set in Railway Dashboard)
+Ensure the following environment variables are set:
+- `DATABASE_URL`: Your MySQL connection string
+- `JWT_SECRET`: A secure random string
+- `OAUTH_SERVER_URL`: `https://manus.im/auth`
+- `VITE_APP_ID`: `erectile-dysfunction-tracker`
+- `VITE_OAUTH_PORTAL_URL`: `https://manus.im/auth`
+- `NODE_ENV`: `production`
+- `CI`: `true`
+
+---
+
 ## Architecture Overview
 
 ```
@@ -61,22 +81,35 @@
 
 ---
 
-## Deployment on Railway
+## Key Files to Know
 
-### 1. Environment Variables
-Ensure the following are set in your Railway project:
-- `NODE_ENV`: `production`
-- `PORT`: `3000` (Railway will override this)
-- `DATABASE_URL`: Your MySQL connection string
-- `JWT_SECRET`: A secure random string
-- `VITE_OAUTH_PORTAL_URL`: `https://manus.im/auth`
-- `VITE_APP_ID`: `erectile-dysfunction-tracker`
-
-### 2. Build & Start Commands
-- **Build Command**: `npm install && npm run build`
-- **Start Command**: `node dist/server.js`
+| File | Purpose |
+|------|---------|
+| `server/index.ts` | Main server entry point |
+| `server/app.ts` | **CRITICAL**: Handles static file serving and SPA fallback |
+| `vite.config.ts` | **CRITICAL**: Defines frontend build output path (`dist/client`) |
+| `railway.json` | **CRITICAL**: Railway deployment configuration |
+| `server/routers.ts` | All tRPC API procedures |
 
 ---
 
-**Final Checkpoint**: `d3fbab8` (CommonJS Recovery Fix)
+## Development Workflow
+
+```bash
+# Install
+pnpm install
+
+# Dev (Hot Reload)
+pnpm dev
+
+# Build (Production)
+pnpm build
+
+# Start (Production)
+pnpm start
+```
+
+---
+
+**Final Checkpoint**: `d0cbe6a` (Railway Deployment Ready)
 **Status**: Ready for Production 🚀
