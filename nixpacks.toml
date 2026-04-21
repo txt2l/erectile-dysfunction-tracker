@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["nodejs_22", "pnpm-9_x", "openssl", "caddy"]
+nixPkgs = ['nodejs-22', 'pnpm_9', 'openssl', 'caddy']
 
 [phases.install]
 cmds = ["pnpm install"]
