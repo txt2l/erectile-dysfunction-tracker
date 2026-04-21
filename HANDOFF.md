@@ -13,39 +13,40 @@
 
 ## Critical Fixes Applied (April 2026) ✅
 
-### 1. Docker + Caddy Migration
-- **Issue**: Transitioning from Nixpacks to a more robust Docker-based deployment with a reverse proxy.
+### 1. Docker + Caddy Parallel Execution
+- **Issue**: "Black page" error where Caddy was running but the Node server wasn't started, or the proxy port was mismatched.
+- **Fix**: 
+    *   Updated `Dockerfile` `CMD` to start both Node and Caddy in parallel using `sh -c "node dist/server.js & caddy run ..."`.
+    *   Updated `assets/Caddyfile` to use the `{$PORT}` environment variable for the reverse proxy target.
+    *   **Action Required**: Add `PORT=3000` to Railway environment variables.
+
+### 2. Docker + Caddy Migration
+- **Issue**: Transitioning from Nixpacks to a more robust Docker-based deployment.
 - **Fix**: Implemented a multi-stage `Dockerfile` and a `Caddyfile` for reverse proxying.
-- **Caddy Configuration**: Caddy handles HTTPS (on Railway) and reverse proxies traffic to the Node.js server running on port 3000.
 - **Build Process**: Multi-stage Docker build ensures a small final image with only necessary production artifacts.
 
-### 2. Railway + Nixpacks Lock-in (npm Migration)
-- **Issue**: Railway switching between builders and Node version mismatches. pnpm was causing Nix derivation failures.
+### 3. Railway + Nixpacks Lock-in (npm Migration)
+- **Issue**: Railway switching between builders and Node version mismatches.
 - **Fix**: Migrated from `pnpm` to `npm` for better stability. Generated a fresh `package-lock.json`.
 - **Version Control**: Added `.node-version` (22) and `.npmrc` (`engine-strict=true`) to strictly enforce the environment.
 
-### 3. CommonJS Recovery (Railway Crash Fix)
+### 4. CommonJS Recovery (Railway Crash Fix)
 - **Issue**: Persistent crashes due to ESM/Require conflicts.
 - **Fix**: Converted the backend to a pure CommonJS architecture.
-    *   Removed `"type": "module"` from `package.json`.
-    *   Updated `tsconfig.json` to force `CommonJS` output.
-    *   Used `tsup` for a reliable CommonJS server bundle (`dist/server.js`).
-
-### 4. Static Path Resolution & SPA Routing
-- **Issue**: "Not Found" errors because the server couldn't locate the frontend build or handle deep routes.
-- **Fix**: Standardized on `path.join(process.cwd(), "dist/client")` for all static serving and SPA fallback logic.
 
 ---
 
 ## Railway Deployment Configuration 🚀
 
 ### 1. Docker Deployment
-Railway will automatically detect the `Dockerfile` in the root directory and use it for deployment, ignoring Nixpacks.
-- **Exposed Ports**: 3000 (Node), 80 (Caddy)
-- **Start Command**: `caddy run --config /etc/caddy/Caddyfile --adapter caddyfile`
+Railway will automatically detect the `Dockerfile` in the root directory.
+- **Exposed Ports**: 80 (Caddy)
+- **Internal Port**: 3000 (Node)
+- **Start Command**: `sh -c "node dist/server.js & caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"`
 
 ### 2. Required Secrets (Set in Railway Dashboard)
 Ensure the following environment variables are set:
+- `PORT`: `3000` (Internal port for Node)
 - `DATABASE_URL`: Your MySQL connection string
 - `JWT_SECRET`: A secure random string (min 32 chars)
 - `OAUTH_SERVER_URL`: Your OAuth server base URL
@@ -62,7 +63,7 @@ Ensure the following environment variables are set:
 ┌─────────────────────────────────────────────────────────────┐
 │ Caddy Reverse Proxy (Port 80)                               │
 └───────────────┬─────────────────────────────────────────────┘
-                │ Proxy to localhost:3000
+                │ Proxy to localhost:{$PORT}
 ┌───────────────▼─────────────────────────────────────────────┐
 │ Unified Backend (Express + CommonJS) (Port 3000)            │
 │ /server/                                                    │
@@ -90,5 +91,5 @@ Ensure the following environment variables are set:
 
 ---
 
-**Final Checkpoint**: `docker-caddy-v1` (Docker + Caddy + Node 22)
+**Final Checkpoint**: `docker-caddy-v2` (Parallel Start + Dynamic Port)
 **Status**: Ready for Production 🚀
