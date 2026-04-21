@@ -1,6 +1,9 @@
+nixVersion = 'latest'
+nixpkgsArchive = 'github:NixOS/nixpkgs/ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7'
+providers = ['node']
+
 [phases.setup]
-onlyIncludeFiles = []
-nixPkgs = ['nodejs_22', 'pnpm_9', 'openssl', 'caddy']
+nixPkgs = ['nodejs_22', 'pnpm_9', 'caddy', 'openssl']
 
 [phases.install]
 cmds = ['pnpm install']
