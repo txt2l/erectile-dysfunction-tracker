@@ -417,8 +417,8 @@ WebSocket connections require special handling with Netlify redirects. If real-t
 | `S3_REGION` | Yes | AWS region (e.g., `us-east-1`) |
 | `S3_ACCESS_KEY_ID` | Yes | AWS access key for S3 |
 | `S3_SECRET_ACCESS_KEY` | Yes | AWS secret key for S3 |
-| `OAUTH_SERVER_URL` | If using Manus Auth | OAuth server base URL |
-| `VITE_APP_ID` | If using Manus Auth | OAuth application ID |
+| `OAUTH_SERVER_URL` | If using OAuth | OAuth server base URL |
+| `VITE_APP_ID` | If using OAuth | OAuth application ID |
 
 ### Frontend (Netlify)
 
