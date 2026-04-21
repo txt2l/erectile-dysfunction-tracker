@@ -48,8 +48,8 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  // The static files are in dist/client (as configured in vite.config.ts)
-  const distPath = path.resolve(process.cwd(), "dist", "client");
+  // Use path.join(process.cwd(), "dist/client") as per schema for robust Railway path resolution
+  const distPath = path.join(process.cwd(), "dist", "client");
 
   console.log(`[Static] Serving files from: ${distPath}`);
 
@@ -63,7 +63,7 @@ export function serveStatic(app: Express) {
       return res.status(404).json({ error: "Not Found" });
     }
     
-    const indexPath = path.resolve(distPath, "index.html");
+    const indexPath = path.join(distPath, "index.html");
     
     if (fs.existsSync(indexPath)) {
       // Use sendFile as per schema for robust SPA routing
