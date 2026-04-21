@@ -49,12 +49,15 @@ export async function setupVite(app: Express, server: Server) {
 
 export function serveStatic(app: Express) {
   // Use path.join(process.cwd(), "dist/client") as per schema for robust Railway path resolution
-  const distPath = path.join(process.cwd(), "dist", "client");
+  const CLIENT_PATH = path.join(process.cwd(), "dist/client");
 
-  console.log(`[Static] Serving files from: ${distPath}`);
+  console.log(`[Static] Serving files from: ${CLIENT_PATH}`);
+  
+  // CRITICAL VERIFICATION STEP (AS PER SCHEMA)
+  console.log("CLIENT BUILD EXISTS:", fs.existsSync(path.join(CLIENT_PATH, "index.html")));
 
   // 1. SERVE STATIC FRONTEND
-  app.use(express.static(distPath, { index: false }));
+  app.use(express.static(CLIENT_PATH, { index: false }));
 
   // 2. SPA FALLBACK ROUTE (CRITICAL FIX)
   app.get("*", (req, res) => {
@@ -63,14 +66,14 @@ export function serveStatic(app: Express) {
       return res.status(404).json({ error: "Not Found" });
     }
     
-    const indexPath = path.join(distPath, "index.html");
+    const indexPath = path.join(CLIENT_PATH, "index.html");
     
     if (fs.existsSync(indexPath)) {
       // Use sendFile as per schema for robust SPA routing
       res.sendFile(indexPath);
     } else {
       console.error(`[Static] index.html not found at: ${indexPath}`);
-      res.status(404).send(`Not Found: ${req.originalUrl} (Static path: ${distPath})`);
+      res.status(404).send(`Not Found: ${req.originalUrl} (Static path: ${CLIENT_PATH})`);
     }
   });
 }

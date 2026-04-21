@@ -1,8 +1,8 @@
-import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
-import path from "node:path";
-import { defineConfig } from "vite";
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react"
+import tailwindcss from "@tailwindcss/vite"
+import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc"
+import path from "node:path"
 
 const PROJECT_ROOT = import.meta.dirname;
 
@@ -19,19 +19,7 @@ export default defineConfig({
   root: path.resolve(PROJECT_ROOT, "client"),
   publicDir: path.resolve(PROJECT_ROOT, "client", "public"),
   build: {
-    // Explicitly set outDir to dist/client relative to the project root
-    outDir: path.resolve(PROJECT_ROOT, "dist", "client"),
-    emptyOutDir: true,
-  },
-  server: {
-    host: true,
-    allowedHosts: [
-      "localhost",
-      "127.0.0.1",
-    ],
-    fs: {
-      strict: true,
-      deny: ["**/.*"],
-    },
-  },
-});
+    outDir: "dist/client",
+    emptyOutDir: true
+  }
+})

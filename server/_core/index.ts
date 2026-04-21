@@ -118,6 +118,7 @@ async function startServer() {
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
+    console.log("[Server] Production mode detected, serving static files...");
     serveStatic(app);
   }
 
