@@ -48,9 +48,8 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  // In production, the server is bundled into dist/index.js
-  // The static files are in dist/public
-  const distPath = path.resolve(process.cwd(), "dist", "public");
+  // The static files are in dist/client (as configured in vite.config.ts)
+  const distPath = path.resolve(process.cwd(), "dist", "client");
 
   console.log(`[Static] Serving files from: ${distPath}`);
 

@@ -55,20 +55,7 @@ export default function Home() {
     if (user) {
       setLocation("/workspace");
     } else {
-      // Use the correct auth portal URL identified from the screenshot
-      const oauthPortalUrl = "https://manus.im/auth";
-      const appId = "erectile-dysfunction-tracker";
-      const origin = window.location.origin;
-      const redirectUri = `${origin}/api/oauth/callback`;
-      const state = btoa(redirectUri);
-      
-      const url = new URL(`${oauthPortalUrl}/app-auth`);
-      url.searchParams.set("appId", appId);
-      url.searchParams.set("redirectUri", redirectUri);
-      url.searchParams.set("state", state);
-      url.searchParams.set("type", "signIn");
-      
-      window.location.href = url.toString();
+      window.location.href = getLoginUrl();
     }
   };
 
