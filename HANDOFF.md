@@ -42,7 +42,7 @@
 Railway will automatically detect the `Dockerfile` in the root directory.
 - **Exposed Ports**: 80 (Caddy)
 - **Internal Port**: 3000 (Node)
-- **Start Command**: `sh -c "node dist/server.js & caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"`
+- **Start Command**: `sh -c "node dist/server.js & sleep 2 && caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"`
 
 ### 2. Required Secrets (Set in Railway Dashboard)
 Ensure the following environment variables are set:
