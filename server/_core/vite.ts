@@ -56,10 +56,12 @@ export function serveStatic(app: Express) {
     path.resolve(process.cwd(), "public"),
     path.resolve(import.meta.dirname, "public"),
     path.resolve(import.meta.dirname, "..", "public"),
+    path.resolve(import.meta.dirname, "..", "..", "client", "dist"),
   ];
 
   let distPath = "";
   for (const p of pathsToTry) {
+    console.log(`[Static] Checking path: ${p}`);
     if (fs.existsSync(p) && fs.existsSync(path.join(p, "index.html"))) {
       distPath = p;
       break;
@@ -77,7 +79,7 @@ export function serveStatic(app: Express) {
   }
 
   // Serve static files from the resolved directory
-  app.use(express.static(distPath));
+  app.use(express.static(distPath, { index: false }));
 
   // Fall through to index.html for all other routes (SPA support)
   app.use("*", (req, res) => {
@@ -87,6 +89,8 @@ export function serveStatic(app: Express) {
     }
     
     const indexPath = path.resolve(distPath, "index.html");
+    console.log(`[Static] Serving index.html from: ${indexPath} for URL: ${req.originalUrl}`);
+    
     if (fs.existsSync(indexPath)) {
       // In production, we inject environment variables into the HTML
       // so the frontend can access them even if they weren't present at build time.
@@ -103,7 +107,7 @@ export function serveStatic(app: Express) {
       
       res.send(html);
     } else {
-      res.status(404).send(`Not Found: ${req.originalUrl} (Static path: ${distPath})`);
+      res.status(404).send(`Not Found: ${req.originalUrl} (Static path: ${distPath}, Index path: ${indexPath})`);
     }
   });
 }
