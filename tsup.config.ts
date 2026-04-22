@@ -28,7 +28,7 @@ export default defineConfig({
   minify: false,
   platform: 'node',
   skipLibCheck: true,
-  clean: true,
+  clean: false,
   dts: false,
   sourcemap: true,
   splitting: false,
