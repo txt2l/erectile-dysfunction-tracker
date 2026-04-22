@@ -19,4 +19,4 @@ COPY --from=builder /app/package.json ./package.json
 COPY assets/Caddyfile /etc/caddy/Caddyfile
 ENV NODE_ENV=production
 EXPOSE 80
-CMD sh -c "node dist/server.js & sleep 5 && caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"
+CMD sh -c "echo '=== Starting Node ==='; node dist/server.js & NODE_PID=\$!; echo \"Node PID: \$NODE_PID\"; sleep 10; echo '=== Starting Caddy ==='; caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"
