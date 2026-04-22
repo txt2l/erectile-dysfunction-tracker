@@ -2,4 +2,4 @@
 # builder = "NIXPACKS"
 
 [deploy]
-startCommand = "sh -c 'echo \"Starting Node...\"; node dist/server.js & echo \"Node PID $!\"; sleep 5; echo \"Starting Caddy...\"; caddy run --config /etc/caddy/Caddyfile --adapter caddyfile'"
+startCommand = "sh -c 'echo "PORT=$PORT"; ls -la dist/; node dist/server.js'"
