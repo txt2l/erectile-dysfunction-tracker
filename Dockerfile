@@ -7,4 +7,4 @@ COPY . .
 RUN npm run build
 
 EXPOSE 3000
-CMD ["sh", "-c", "echo 'PORT=$PORT'; ls -la dist/; node dist/server.js"]
+CMD ["sh", "-c", "echo PORT=$PORT; ls -la dist/; node dist/server.js"]
