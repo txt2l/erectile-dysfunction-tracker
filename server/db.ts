@@ -291,3 +291,19 @@ export async function deleteResource(id: string) {
   if (!db) return;
   await db.delete(resources).where(eq(resources.id, id));
 }
+
+// ─── Activity Logs ───
+export async function getRoomActivityLogs(roomId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  // Note: activityLogs table uses string IDs for userId/id, but the router passes a numeric roomId.
+  // We filter by entityId (as string) and entityType 'room' to match the intent.
+  return db.select()
+    .from(activityLogs)
+    .where(and(
+      eq(activityLogs.entityType, "room"),
+      eq(activityLogs.entityId, String(roomId))
+    ))
+    .orderBy(desc(activityLogs.createdAt))
+    .limit(100);
+}

@@ -4,16 +4,17 @@
     "rootDir": ".",
     "module": "CommonJS",
     "target": "ES2020",
-    "moduleResolution": "Node",
+    "moduleResolution": "Node16",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
     "types": ["node", "vite/client"],
     "paths": {
-      "@/*": ["./src/*"],
-      "@shared/*": ["./shared/*"],
-      "@assets/*": ["./attached_assets/*"]
+      "@/*": ["src/*"],
+      "@shared/*": ["shared/*"],
+      "@shared": ["shared/const.ts"],
+      "@assets/*": ["attached_assets/*"]
     }
   },
   "include": ["src/**/*", "shared/**/*", "server/**/*"],

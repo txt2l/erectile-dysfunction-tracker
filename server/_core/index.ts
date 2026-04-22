@@ -1,4 +1,5 @@
 import "dotenv/config";
+import "tsconfig-paths/register";
 import express from "express";
 import { createServer } from "http";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -9,7 +10,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { setupPresence } from "../socket/presence";
 import { sdk } from "./sdk";
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME } from "../../shared/const";
 import { parse as parseCookieHeader } from "cookie";
 
 async function startServer() {
