@@ -1,5 +1,5 @@
 [build]
-builder = "NIXPACKS"
+# builder = "NIXPACKS"
 
 [deploy]
-startCommand = "node dist/server.js"
+startCommand = "sh -c 'node dist/server.js & sleep 5 && caddy run --config /etc/caddy/Caddyfile --adapter caddyfile'"
