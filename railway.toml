@@ -1,5 +1,0 @@
-[build]
-# builder = "NIXPACKS"
-
-[deploy]
-startCommand = "sh -c 'echo "PORT=$PORT"; ls -la dist/; node dist/server.js'"
