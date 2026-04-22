@@ -28,12 +28,22 @@ export async function setupVite(app: Express, server: Server) {
       const clientTemplate = path.resolve(
         __dirname,
         "../..",
-        "client",
+        "src",
+        "main.tsx"
+      );
+      
+      // For development, we use the src/main.tsx as the template
+      // Vite will transform it into the full HTML page
+      const actualTemplate = path.resolve(
+        __dirname,
+        "../..",
         "index.html"
       );
+      
+      const templatePath = fs.existsSync(actualTemplate) ? actualTemplate : clientTemplate;
 
       // always reload the index.html file from disk incase it changes
-      let template = await fs.promises.readFile(clientTemplate, "utf-8");
+      let template = await fs.promises.readFile(templatePath, "utf-8");
       template = template.replace(
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`
