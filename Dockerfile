@@ -16,7 +16,9 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/server ./server
+COPY --from=builder /app/shared ./shared
 COPY assets/Caddyfile /etc/caddy/Caddyfile
 ENV NODE_ENV=production
 EXPOSE 80
-CMD sh -c "node dist/server.js & sleep 5 && caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"
+CMD sh -c "node_modules/.bin/tsx server/index.ts & sleep 5 && caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"
