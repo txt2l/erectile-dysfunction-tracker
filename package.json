@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "concurrently \"vite\" \"tsx watch server/index.ts\"",
-    "build": "vite build && tsup server/_core/index.ts --out-dir dist --format cjs --minify --platform node --no-bundle --entry.server server/_core/index.ts",
+    "build": "vite build && tsup server/_core/index.ts --out-dir dist --format cjs --minify --platform node --skipLibCheck --entry.server server/_core/index.ts",
     "start": "node dist/server.js",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
