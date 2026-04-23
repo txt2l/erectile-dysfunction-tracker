@@ -1,7 +1,7 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { getLoginUrl } from "@/const";
-import { trpc } from "@/lib/trpc";
+import { useAuth } from "./_core/hooks/useAuth";
+import { Button } from "./components/ui/button";
+import { getLoginUrl } from "./const";
+import { trpc } from "./lib/trpc";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "wouter";
 import {
@@ -14,35 +14,35 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 // Panel imports
-import ChatPanel from "@/components/panels/ChatPanel";
-import MemoryPanel from "@/components/panels/MemoryPanel";
-import TasksPanel from "@/components/panels/TasksPanel";
-import CalendarPanel from "@/components/panels/CalendarPanel";
-import FilesPanel from "@/components/panels/FilesPanel";
-import MindmapPanel from "@/components/panels/MindmapPanel";
-import SignaturesPanel from "@/components/panels/SignaturesPanel";
-import NotebookPanel from "@/components/panels/NotebookPanel";
-import ActivityLogPanel from "@/components/panels/ActivityLogPanel";
-import ProfilePanel from "@/components/panels/ProfilePanel";
-import TeamPanel from "@/components/panels/TeamPanel";
-import ResourcesPanel from "@/components/panels/ResourcesPanel";
-import { RoomTree } from "@/components/RoomTree";
-import { Omnibox } from "@/components/Omnibox";
-import { GlobalMap } from "@/components/GlobalMap";
+import ChatPanel from "./components/panels/ChatPanel";
+import MemoryPanel from "./components/panels/MemoryPanel";
+import TasksPanel from "./components/panels/TasksPanel";
+import CalendarPanel from "./components/panels/CalendarPanel";
+import FilesPanel from "./components/panels/FilesPanel";
+import MindmapPanel from "./components/panels/MindmapPanel";
+import SignaturesPanel from "./components/panels/SignaturesPanel";
+import NotebookPanel from "./components/panels/NotebookPanel";
+import ActivityLogPanel from "./components/panels/ActivityLogPanel";
+import ProfilePanel from "./components/panels/ProfilePanel";
+import TeamPanel from "./components/panels/TeamPanel";
+import ResourcesPanel from "./components/panels/ResourcesPanel";
+import { RoomTree } from "./components/RoomTree";
+import { Omnibox } from "./components/Omnibox";
+import { GlobalMap } from "./components/GlobalMap";
 
 type PanelType = "chat" | "memory" | "tasks" | "calendar" | "files" | "mindmap" | "signatures" | "notebook" | "log" | "profile" | "team" | "resources" | "map";
 
 const panelConfig: { id: PanelType; icon: any; label: string; shortcut: string }[] = [
-  { id: "chat", icon: MessageSquare, label: "Chat", shortcut: "" },
+  { id: "chat", icon: MessageSquare, label: "Chat", shortcut: "^C" },
   { id: "team", icon: Users, label: "Team", shortcut: "^T" },
   { id: "resources", icon: Library, label: "Resources", shortcut: "^R" },
   { id: "map", icon: MapIcon, label: "Map", shortcut: "^G" },
   { id: "memory", icon: Brain, label: "Memory", shortcut: "^M" },
   { id: "tasks", icon: CheckSquare, label: "Tasks", shortcut: "^K" },
-  { id: "calendar", icon: Calendar, label: "Calendar", shortcut: "^C" },
+  { id: "calendar", icon: Calendar, label: "Calendar", shortcut: "^D" },
   { id: "mindmap", icon: Network, label: "Mindmap", shortcut: "^X" },
   { id: "signatures", icon: PenTool, label: "Signatures", shortcut: "^S" },
-  { id: "notebook", icon: BookOpen, label: "Notebook", shortcut: "" },
+  { id: "notebook", icon: BookOpen, label: "Notebook", shortcut: "^N" },
   { id: "log", icon: ScrollText, label: "Log", shortcut: "^L" },
   { id: "profile", icon: User, label: "Profile", shortcut: "^P" },
 ];
@@ -77,7 +77,7 @@ export default function Workspace() {
       if (e.ctrlKey || e.metaKey) {
         const map: Record<string, PanelType> = {
           t: "team", g: "glossary" as any, p: "profile", n: "note" as any,
-          r: "resources", m: "memory", k: "tasks", c: "calendar", x: "mindmap",
+          r: "resources", m: "memory", k: "tasks", d: "calendar", x: "mindmap",
         };
         const panel = map[e.key.toLowerCase()];
         if (panel) {
