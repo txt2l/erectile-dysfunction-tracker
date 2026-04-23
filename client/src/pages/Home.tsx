@@ -1,6 +1,6 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { getLoginUrl } from "@/const";
+import { useAuth } from "./_core/hooks/useAuth";
+import { Button } from "./components/ui/button";
+import { getLoginUrl } from "./const";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import {
