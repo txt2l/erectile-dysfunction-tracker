@@ -1,7 +1,7 @@
 import { useAuth } from "../_core/hooks/useAuth";
 import { Button } from "../components/ui/button";
 import { getLoginUrl } from "../const";
-import { trpc } from "./lib/trpc";
+import { trpc } from "../lib/trpc";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "wouter";
 import {
