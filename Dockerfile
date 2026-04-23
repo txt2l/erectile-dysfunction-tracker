@@ -30,5 +30,5 @@ RUN echo "=== BUILD VERIFICATION ===" && \
 
 EXPOSE 3000
 
-# Start server with detailed logging
-CMD ["sh", "-c", "echo 'Starting ChatroomLM...'; echo 'PORT='$PORT; echo 'NODE_ENV='$NODE_ENV; echo ''; echo 'Dist contents:'; ls -la dist/client/ || echo 'MISSING CLIENT BUILD'; echo ''; node dist/server.js"]
+# Start server using tsx (available via devDependencies installed by npm ci)
+CMD ["sh", "-c", "echo 'Starting ChatroomLM...'; echo 'PORT='$PORT; echo 'NODE_ENV='$NODE_ENV; echo ''; echo 'Dist contents:'; ls -la dist/client/ || echo 'MISSING CLIENT BUILD'; echo ''; npx tsx server/index.ts"]
