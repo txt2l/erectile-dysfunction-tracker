@@ -1,9 +1,9 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { trpc } from "@/lib/trpc";
+import { useAuth } from "../../_core/hooks/useAuth";
+import { trpc } from "../../lib/trpc";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 import { User, Save, LogOut, Loader2, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 

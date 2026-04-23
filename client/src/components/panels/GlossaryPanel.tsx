@@ -1,10 +1,10 @@
-import { trpc } from "@/lib/trpc";
+import { trpc } from "../../lib/trpc";
 import { useState } from "react";
 import { Loader2, Search, Plus, BookOpen, X, Save } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import { Textarea } from "../ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { toast } from "sonner";
 
 export default function GlossaryPanel() {

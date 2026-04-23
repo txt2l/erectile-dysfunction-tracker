@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { trpc } from "@/lib/trpc";
+import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "./ui/command";
+import { trpc } from "../lib/trpc";
 import { MessageSquare, Users, BookOpen, User, Hash, Search, Terminal } from "lucide-react";
 import { useLocation } from "wouter";
 

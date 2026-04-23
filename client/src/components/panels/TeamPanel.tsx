@@ -1,9 +1,9 @@
-import { trpc } from "@/lib/trpc";
+import { trpc } from "../../lib/trpc";
 import { useState } from "react";
 import { Loader2, Search, MapPin, Mail, ExternalLink } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { ProfileModal } from "@/components/ProfileModal";
-import { usePresence } from "@/hooks/usePresence";
+import { Input } from "../ui/input";
+import { ProfileModal } from "../ProfileModal";
+import { usePresence } from "../../hooks/usePresence";
 
 export default function TeamPanel() {
   const [search, setSearch] = useState("");

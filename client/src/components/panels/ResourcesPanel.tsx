@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { trpc } from "@/lib/trpc";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { trpc } from "../../lib/trpc";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Plus, ExternalLink, Trash2, Link as LinkIcon, Search, Tag, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 

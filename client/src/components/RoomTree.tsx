@@ -1,8 +1,8 @@
-import { trpc } from "@/lib/trpc";
+import { trpc } from "../lib/trpc";
 import { Hash, ChevronRight, ChevronDown, Plus, MoreVertical } from "lucide-react";
 import { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "./ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
 interface RoomTreeProps {
   selectedRoomId: number | null;

@@ -1,8 +1,8 @@
-import { trpc } from "@/lib/trpc";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { usePresence } from "@/hooks/usePresence";
+import { trpc } from "../lib/trpc";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { usePresence } from "../hooks/usePresence";
 import { Loader2, MapPin, Briefcase, GraduationCap, Quote, Globe, Share2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "./ui/badge";
 
 interface ProfileModalProps {
   userId: number | null;

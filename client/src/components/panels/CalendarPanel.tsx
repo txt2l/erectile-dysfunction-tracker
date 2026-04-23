@@ -1,9 +1,9 @@
-import { trpc } from "@/lib/trpc";
+import { trpc } from "../../lib/trpc";
 import { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Plus, ChevronLeft, ChevronRight, Calendar as CalIcon, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 

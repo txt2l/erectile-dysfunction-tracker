@@ -1,6 +1,6 @@
-import { trpc } from "@/lib/trpc";
+import { trpc } from "../../lib/trpc";
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { Input } from "../ui/input";
 import { ScrollText, Search, Loader2, MessageSquare, Brain, CheckSquare, Calendar, FolderOpen, PenTool, BookOpen, User, Settings } from "lucide-react";
 
 const actionIcons: Record<string, any> = {

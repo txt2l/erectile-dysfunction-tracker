@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { socket } from "@/lib/socket";
+import { socket } from "../lib/socket";
 
 export function usePresence() {
   const [onlineCount, setOnlineCount] = useState(0);

@@ -1,8 +1,8 @@
-import { trpc } from "@/lib/trpc";
+import { trpc } from "../../lib/trpc";
 import { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import {
   FolderOpen, Plus, Upload, Trash2, Search, File, Image, Music,
   Video, FileText, Archive, Loader2, FolderPlus, ChevronRight, X

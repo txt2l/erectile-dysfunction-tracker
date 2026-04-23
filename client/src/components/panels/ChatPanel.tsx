@@ -1,18 +1,18 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { trpc } from "@/lib/trpc";
+import { useAuth } from "../../_core/hooks/useAuth";
+import { trpc } from "../../lib/trpc";
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
-import { socket as globalSocket } from "@/lib/socket";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { socket as globalSocket } from "../../lib/socket";
+import { Button } from "../ui/button";
+import { Textarea } from "../ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import {
   Send, SmilePlus, Reply, Languages, Bold, Italic, Underline,
   List, ListChecks, Code, Loader2, ChevronUp
 } from "lucide-react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
-import { ProfileModal } from "@/components/ProfileModal";
-import { handleCommand } from "@/lib/commands";
+import { ProfileModal } from "../ProfileModal";
+import { handleCommand } from "../../lib/commands";
 import { useLocation } from "wouter";
 
 const EMOJIS = ["👍", "👎", "❤️", "🔥", "🎉", "😂", "🤔", "👀", "✅", "❌"];
