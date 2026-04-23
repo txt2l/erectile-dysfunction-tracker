@@ -4,8 +4,8 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import { ErrorBoundary } from "../client/src/components/ErrorBoundary";
 import { ThemeProvider } from "../client/src/contexts/ThemeContext";
-import Home from "./pages/Home";
-import Workspace from "./pages/Workspace";
+import Home from "../client/src/pages/Home";
+import Workspace from "../client/src/pages/Workspace";
 
 function Router() {
   return (
