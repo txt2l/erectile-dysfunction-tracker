@@ -1,6 +1,6 @@
 import { Toaster } from "../client/src/components/ui/sonner";
 import { TooltipProvider } from "../client/src/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
+import NotFound from "../client/src/pages/NotFound";
 import { Route, Switch } from "wouter";
 import { ErrorBoundary } from "../client/src/components/ErrorBoundary";
 import { ThemeProvider } from "../client/src/contexts/ThemeContext";
