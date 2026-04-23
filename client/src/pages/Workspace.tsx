@@ -14,21 +14,21 @@ import { Input } from "../components/ui/input";
 import { toast } from "../components/ui/sonner";
 
 // Panel imports
-import ChatPanel from "./components/panels/ChatPanel";
-import MemoryPanel from "./components/panels/MemoryPanel";
-import TasksPanel from "./components/panels/TasksPanel";
-import CalendarPanel from "./components/panels/CalendarPanel";
-import FilesPanel from "./components/panels/FilesPanel";
-import MindmapPanel from "./components/panels/MindmapPanel";
-import SignaturesPanel from "./components/panels/SignaturesPanel";
-import NotebookPanel from "./components/panels/NotebookPanel";
-import ActivityLogPanel from "./components/panels/ActivityLogPanel";
-import ProfilePanel from "./components/panels/ProfilePanel";
-import TeamPanel from "./components/panels/TeamPanel";
-import ResourcesPanel from "./components/panels/ResourcesPanel";
-import { RoomTree } from "./components/RoomTree";
-import { Omnibox } from "./components/Omnibox";
-import { GlobalMap } from "./components/GlobalMap";
+import ChatPanel from "../components/panels/ChatPanel";
+import MemoryPanel from "../components/panels/MemoryPanel";
+import TasksPanel from "../components/panels/TasksPanel";
+import CalendarPanel from "../components/panels/CalendarPanel";
+import FilesPanel from "../components/panels/FilesPanel";
+import MindmapPanel from "../components/panels/MindmapPanel";
+import SignaturesPanel from "../components/panels/SignaturesPanel";
+import NotebookPanel from "../components/panels/NotebookPanel";
+import ActivityLogPanel from "../components/panels/ActivityLogPanel";
+import ProfilePanel from "../components/panels/ProfilePanel";
+import TeamPanel from "../components/panels/TeamPanel";
+import ResourcesPanel from "../components/panels/ResourcesPanel";
+import { RoomTree } from "../components/RoomTree";
+import { Omnibox } from "../components/Omnibox";
+import { GlobalMap } from "../components/GlobalMap";
 
 type PanelType = "chat" | "memory" | "tasks" | "calendar" | "files" | "mindmap" | "signatures" | "notebook" | "log" | "profile" | "team" | "resources" | "map";
 
