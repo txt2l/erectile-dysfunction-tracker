@@ -9,7 +9,7 @@ import {
   Network, PenTool, BookOpen, ScrollText, User, Plus, Hash,
   Loader2, ChevronLeft, Users, Search, Map as MapIcon, Library
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog";
 import { Input } from "./components/ui/input";
 import { toast } from "./components/ui/sonner";
 
