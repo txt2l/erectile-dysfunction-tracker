@@ -21,13 +21,16 @@ export function ThemeProvider({
   defaultTheme = "light",
   switchable = false,
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
+
+  useEffect(() => {
     if (switchable) {
       const stored = localStorage.getItem("theme");
-      return (stored as Theme) || defaultTheme;
+      if (stored === "light" || stored === "dark") {
+        setTheme(stored);
+      }
     }
-    return defaultTheme;
-  });
+  }, [switchable]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -39,51 +42,6 @@ export function ThemeProvider({
 
   const toggleTheme = switchable
     ? () => setTheme((prev) => (prev === "light" ? "dark" : "light"))
-    : undefined;
-
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, switchable }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error("useTheme must be used within ThemeProvider");
-  }
-  return context;
-}    if (switchable) localStorage.setItem("theme", theme);
-  }, [theme, switchable]);
-
-  const toggleTheme = switchable
-    ? () => setTheme(prev => (prev === "light" ? "dark" : "light"))
-    : undefined;
-
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, switchable }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (!context) throw new Error("useTheme must be used within ThemeProvider");
-  return context;
-}      root.classList.remove("dark");
-    }
-
-    if (switchable) {
-      localStorage.setItem("theme", theme);
-    }
-  }, [theme, switchable]);
-
-  const toggleTheme = switchable
-    ? () => {
-        setTheme(prev => (prev === "light" ? "dark" : "light"));
-      }
     : undefined;
 
   return (
