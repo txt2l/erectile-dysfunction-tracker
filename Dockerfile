@@ -5,30 +5,29 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with legacy peer deps
+# Install ALL dependencies (dev needed for build tools: vite, tsup, tsx)
 RUN npm ci --legacy-peer-deps
 
 # Copy entire project
 COPY . .
 
-# Build the application
-RUN npm run build
+# Build client (vite -> dist/client) AND server (tsup -> dist/)
+RUN npm run build && npx tsup
 
-# Debug: Verify client build exists
+# Prune dev dependencies to keep image lean
+RUN npm prune --omit=dev --legacy-peer-deps
+
+# Verify both builds exist
 RUN echo "=== BUILD VERIFICATION ===" && \
-    echo "Contents of dist/:" && \
-    ls -la dist/ && \
-    echo "" && \
-    echo "Contents of dist/client/:" && \
+    echo "-- Client build (dist/client):" && \
     ls -la dist/client/ || echo "NO CLIENT BUILD" && \
-    echo "" && \
-    echo "Checking for index.html:" && \
-    test -f dist/client/index.html && echo "✓ index.html found" || echo "✗ index.html MISSING" && \
-    echo "" && \
-    echo "Contents of dist/client/assets/:" && \
-    ls -la dist/client/assets/ || echo "NO ASSETS"
+    test -f dist/client/index.html && echo "index.html found" || echo "index.html MISSING" && \
+    echo "-- Server build (dist/):" && \
+    ls dist/*.js 2>/dev/null || echo "NO SERVER JS FILES"
 
 EXPOSE 3000
 
-# Start server using tsx (available via devDependencies installed by npm ci)
-CMD ["sh", "-c", "echo 'Starting ChatroomLM...'; echo 'PORT='$PORT; echo 'NODE_ENV='$NODE_ENV; echo ''; echo 'Dist contents:'; ls -la dist/client/ || echo 'MISSING CLIENT BUILD'; echo ''; npx tsx server/index.ts"]
+ENV NODE_ENV=production
+
+# Run the compiled server bundle directly with node (fast, no transpilation)
+CMD ["node", "dist/server.js"]
