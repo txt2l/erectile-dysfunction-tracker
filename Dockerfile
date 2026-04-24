@@ -8,6 +8,10 @@ COPY package*.json ./
 # Install ALL dependencies (dev needed for build tools: vite, tsup, tsx)
 RUN npm install --legacy-peer-deps
 
+# After: Install missing peer dependencies
+# Add:
+RUN npm install tw-animate-css --legacy-peer-deps
+
 # Copy entire project
 COPY . .
 
