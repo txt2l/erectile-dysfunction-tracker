@@ -1,0 +1,16 @@
+
+#!/bin/sh
+# AI-Proof Pre-Commit Hook
+# Install: cp pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+echo "🔍 Running AI-Proof Build Validator..."
+node diagnose.js --strict
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ COMMIT BLOCKED: Fix the issues above before committing."
+    echo "   Run 'node diagnose.js --fix' to auto-fix some issues."
+    exit 1
+fi
+
+echo "✅ All checks passed. Proceeding with commit."
