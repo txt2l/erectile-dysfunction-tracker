@@ -44,6 +44,15 @@ export async function setupVite(app: Express, server: Server) {
 
       // always reload the index.html file from disk incase it changes
       let template = await fs.promises.readFile(templatePath, "utf-8");
+      
+      // Inject runtime environment variables
+      const envInjection = `<script>window.ENV_INJECTED = ${JSON.stringify({
+        VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL,
+        VITE_APP_ID: process.env.VITE_APP_ID,
+        VITE_API_URL: process.env.VITE_API_URL,
+      })};</script>`;
+      template = template.replace("</head>", `${envInjection}</head>`);
+
       template = template.replace(
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`
@@ -79,8 +88,19 @@ export function serveStatic(app: Express) {
     const indexPath = path.join(CLIENT_PATH, "index.html");
     
     if (fs.existsSync(indexPath)) {
-      // Use sendFile as per schema for robust SPA routing
-      res.sendFile(indexPath);
+      // Inject runtime environment variables into the static index.html
+      fs.readFile(indexPath, "utf8", (err, data) => {
+        if (err) {
+          return res.status(500).send("Error reading index.html");
+        }
+        const envInjection = `<script>window.ENV_INJECTED = ${JSON.stringify({
+          VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL,
+          VITE_APP_ID: process.env.VITE_APP_ID,
+          VITE_API_URL: process.env.VITE_API_URL,
+        })};</script>`;
+        const html = data.replace("</head>", `${envInjection}</head>`);
+        res.send(html);
+      });
     } else {
       console.error(`[Static] index.html not found at: ${indexPath}`);
       res.status(404).send(`Not Found: ${req.originalUrl} (Static path: ${CLIENT_PATH})`);
