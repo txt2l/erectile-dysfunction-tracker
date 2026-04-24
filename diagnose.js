@@ -1,5 +1,3 @@
-JavaScript
-Copy
 #!/usr/bin/env node
 /**
  * AI-PROOF BUILD VALIDATOR v1.0
@@ -624,4 +622,36 @@ function checkAIMistakes() {
 // MAIN EXECUTION
 // ============================================================
 console.log(`
-${C.bold}${C.c
+${C.bold}${C.cyan}╔══════════════════════════════════════════════════════════╗
+║          AI-PROOF BUILD VALIDATOR v1.0                   ║
+╚══════════════════════════════════════════════════════════╝${C.reset}`);
+
+try {
+  checkFileStructure();
+  checkDependencies();
+  checkCSSImports();
+  checkViteConfig();
+  checkDockerfile();
+  checkEnvironment();
+  checkTypeScript();
+  checkSocketIO();
+  checkDryBuild();
+  checkAIMistakes();
+} catch (e) {
+  fail('Fatal error during validation', e.message);
+}
+
+section('SUMMARY');
+if (TOTAL_ISSUES === 0) {
+  console.log(`${C.green}${C.bold}✓ ALL CHECKS PASSED!${C.reset} Your build is AI-proof.`);
+} else {
+  console.log(`${C.yellow}${C.bold}⚠ FOUND ${TOTAL_ISSUES} ISSUES${C.reset}`);
+  if (FIXED_ISSUES > 0) {
+    console.log(`${C.cyan}${C.bold}🔧 FIXED ${FIXED_ISSUES} ISSUES${C.reset}`);
+  }
+  if (EXIT_CODE !== 0) {
+    console.log(`${C.red}${C.bold}✗ VALIDATION FAILED${C.reset} (Strict mode)`);
+  }
+}
+
+process.exit(EXIT_CODE);
