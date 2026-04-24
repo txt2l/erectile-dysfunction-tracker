@@ -86,6 +86,14 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
 
+  // development mode uses Vite, production mode uses static files
+  if (process.env.NODE_ENV === "development") {
+    await setupVite(app, server);
+  } else {
+    console.log("[Server] Production mode detected, serving static files...");
+    serveStatic(app);
+  }
+
   // tRPC API
   app.use(
     "/api/trpc",
@@ -94,14 +102,6 @@ async function startServer() {
       createContext,
     })
   );
-
-  // development mode uses Vite, production mode uses static files
-  if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
-  } else {
-    console.log("[Server] Production mode detected, serving static files...");
-    serveStatic(app);
-  }
 
   const port = Number(process.env.PORT || 3000);
   server.listen(port, "0.0.0.0", () => {
