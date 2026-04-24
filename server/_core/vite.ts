@@ -47,9 +47,9 @@ export async function setupVite(app: Express, server: Server) {
       
       // Inject runtime environment variables
       const envInjection = `<script>window.ENV_INJECTED = ${JSON.stringify({
-        VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL,
-        VITE_APP_ID: process.env.VITE_APP_ID,
-        VITE_API_URL: process.env.VITE_API_URL,
+        VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_PORTAL_URL,
+        VITE_APP_ID: process.env.VITE_APP_ID || process.env.APP_ID,
+        VITE_API_URL: process.env.VITE_API_URL || process.env.RAILWAY_PUBLIC_DOMAIN,
       })};</script>`;
       template = template.replace("</head>", `${envInjection}</head>`);
 
@@ -94,9 +94,9 @@ export function serveStatic(app: Express) {
           return res.status(500).send("Error reading index.html");
         }
         const envInjection = `<script>window.ENV_INJECTED = ${JSON.stringify({
-          VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL,
-          VITE_APP_ID: process.env.VITE_APP_ID,
-          VITE_API_URL: process.env.VITE_API_URL,
+          VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_PORTAL_URL,
+          VITE_APP_ID: process.env.VITE_APP_ID || process.env.APP_ID,
+          VITE_API_URL: process.env.VITE_API_URL || process.env.RAILWAY_PUBLIC_DOMAIN,
         })};</script>`;
         const html = data.replace("</head>", `${envInjection}</head>`);
         res.send(html);
