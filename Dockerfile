@@ -30,4 +30,5 @@ EXPOSE 3000
 ENV NODE_ENV=production
 
 # Run the compiled server bundle directly with node (fast, no transpilation)
+# Ensure we use the bundled server
 CMD ["node", "dist/server.js"]
