@@ -88,20 +88,34 @@ export function serveStatic(app: Express) {
     const indexPath = path.join(CLIENT_PATH, "index.html");
     
     if (fs.existsSync(indexPath)) {
-      // Inject runtime environment variables into the static index.html
       fs.readFile(indexPath, "utf8", (err, data) => {
         if (err) {
           return res.status(500).send("Error reading index.html");
         }
-        const portalUrl = process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_PORTAL_URL || process.env.OAUTH_SERVER_URL;
-        console.log(`[Injection] Serving index.html with Portal URL: ${portalUrl ? "FOUND" : "NOT FOUND"}`);
         
-        const envInjection = `<script>window.ENV_INJECTED = ${JSON.stringify({
-          VITE_OAUTH_PORTAL_URL: portalUrl,
-          VITE_APP_ID: process.env.VITE_APP_ID || process.env.APP_ID,
-          VITE_API_URL: process.env.VITE_API_URL || process.env.RAILWAY_PUBLIC_DOMAIN || process.env.PUBLIC_DOMAIN,
-        })};</script>`;
-        const html = data.replace("</head>", `${envInjection}</head>`);
+        const portalUrl = process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_PORTAL_URL || process.env.OAUTH_SERVER_URL;
+        const appId = process.env.VITE_APP_ID || process.env.APP_ID;
+        
+        const envVars = {
+          VITE_OAUTH_PORTAL_URL: portalUrl || "",
+          VITE_APP_ID: appId || "",
+        };
+        
+        const envScript = `<script>window.ENV_INJECTED = ${JSON.stringify(envVars)};</script>`;
+        
+        // Try to inject before </head>, fallback to before </body>
+        let html = data;
+        if (html.includes("</head>")) {
+          html = html.replace("</head>", `${envScript}</head>`);
+        } else if (html.includes("</body>")) {
+          html = html.replace("</body>", `${envScript}</body>`);
+        } else {
+          // Last resort: prepend to the entire document
+          html = envScript + html;
+        }
+        
+        console.log(`[Injection] Injected ENV_INJECTED with appId: ${appId ? "SET" : "MISSING"}`);
+        res.set("Content-Type", "text/html");
         res.send(html);
       });
     } else {
