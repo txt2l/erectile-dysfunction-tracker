@@ -93,8 +93,11 @@ export function serveStatic(app: Express) {
         if (err) {
           return res.status(500).send("Error reading index.html");
         }
+        const portalUrl = process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_PORTAL_URL || process.env.OAUTH_SERVER_URL;
+        console.log(`[Injection] Serving index.html with Portal URL: ${portalUrl ? "FOUND" : "NOT FOUND"}`);
+        
         const envInjection = `<script>window.ENV_INJECTED = ${JSON.stringify({
-          VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_PORTAL_URL || process.env.OAUTH_SERVER_URL,
+          VITE_OAUTH_PORTAL_URL: portalUrl,
           VITE_APP_ID: process.env.VITE_APP_ID || process.env.APP_ID,
           VITE_API_URL: process.env.VITE_API_URL || process.env.RAILWAY_PUBLIC_DOMAIN || process.env.PUBLIC_DOMAIN,
         })};</script>`;

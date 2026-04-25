@@ -4,7 +4,7 @@ export { COOKIE_NAME, ONE_YEAR_MS } from "../../shared/const";
 export const getLoginUrl = () => {
   // Use injected env if available, otherwise fallback to build-time env
   const injectedEnv = (window as any).ENV_INJECTED || {};
-  const oauthPortalUrl = injectedEnv.VITE_OAUTH_PORTAL_URL || import.meta.env.VITE_OAUTH_PORTAL_URL;
+  const oauthPortalUrl = injectedEnv.VITE_OAUTH_PORTAL_URL || import.meta.env.VITE_OAUTH_PORTAL_URL || "https://manus.im";
   const appId = injectedEnv.VITE_APP_ID || import.meta.env.VITE_APP_ID;
   
   // Use a safe fallback for redirectUri to avoid potential issues with window.location.origin
