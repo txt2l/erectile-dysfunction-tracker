@@ -15,9 +15,9 @@ import { parse as parseCookieHeader } from "cookie";
 
 async function startServer() {
   console.log("[Server] Starting with ENV:", {
-    VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL ? "SET" : "MISSING",
-    OAUTH_PORTAL_URL: process.env.OAUTH_PORTAL_URL ? "SET" : "MISSING",
-    VITE_APP_ID: process.env.VITE_APP_ID ? "SET" : "MISSING",
+    VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL || "MISSING",
+    OAUTH_PORTAL_URL: process.env.OAUTH_PORTAL_URL || "MISSING",
+    VITE_APP_ID: process.env.VITE_APP_ID || "MISSING",
     NODE_ENV: process.env.NODE_ENV
   });
   const app = express();

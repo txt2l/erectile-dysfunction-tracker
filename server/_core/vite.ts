@@ -114,7 +114,7 @@ export function serveStatic(app: Express) {
           html = envScript + html;
         }
         
-        console.log(`[Injection] Injected ENV_INJECTED with appId: ${appId ? "SET" : "MISSING"}`);
+        console.log(`[Injection] Injected ENV_INJECTED with appId: ${appId || "MISSING"}`);
         res.set("Content-Type", "text/html");
         res.send(html);
       });
