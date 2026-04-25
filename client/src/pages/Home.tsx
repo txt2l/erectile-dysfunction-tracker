@@ -129,7 +129,7 @@ export default function Home() {
             © {new Date().getFullYear()} ChatroomLM — Startup Edition
           </div>
           <div className="font-mono text-xs text-muted-foreground">
-            DARK_MODE::ALWAYS_ON
+            VER::[dd7cc20] // FAILSAVE_ACTIVE
           </div>
         </div>
       </div>
