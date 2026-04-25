@@ -89,7 +89,7 @@ function checkFileStructure() {
   criticalFiles.forEach(file => {
     const fullPath = path.join(ROOT, file.path);
     if (!fs.existsSync(fullPath)) {
-      if (file.path === 'docker-compose.yml') {
+      if (file.path === 'docker-compose.yml' || (file.path === '.env' && CI_MODE)) {
         warn(`Missing ${file.path}`, file.desc);
       } else {
         fail(`Missing ${file.path}`, file.desc);
@@ -374,7 +374,11 @@ function checkEnvironment() {
     const required = ['VITE_APP_ID', 'VITE_OAUTH_PORTAL_URL'];
     const missing = required.filter(v => !content.includes(v));
     if (missing.length > 0) {
-      fail(`Missing ${missing.join(', ')} in .env`, `Local login will fail without these variables.`);
+      if (CI_MODE) {
+        warn(`Missing ${missing.join(', ')} in .env (CI Mode)`);
+      } else {
+        fail(`Missing ${missing.join(', ')} in .env`, `Local login will fail without these variables.`);
+      }
     }
   } else {
     warn('.env file not found', 'Create one from .env.example for local development');
