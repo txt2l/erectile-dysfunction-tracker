@@ -83,6 +83,7 @@ function checkFileStructure() {
     { path: 'docker-compose.yml', desc: 'Docker compose (optional but recommended)' },
     { path: '.env.example', desc: 'Environment template' },
     { path: 'railway.json', desc: 'Railway deployment config' },
+    { path: '.env', desc: 'Local environment file' },
   ];
 
   criticalFiles.forEach(file => {
@@ -358,13 +359,25 @@ function checkEnvironment() {
     fail('.env.example missing', 'New developers/deployment won\'t know required env vars');
   } else {
     const envContent = fs.readFileSync(envExample, 'utf8');
-    const requiredVars = ['DATABASE_URL', 'PORT', 'NODE_ENV', 'JWT_SECRET', 'AWS_REGION'];
+    const requiredVars = ['DATABASE_URL', 'PORT', 'NODE_ENV', 'JWT_SECRET', 'AWS_REGION', 'VITE_APP_ID', 'VITE_OAUTH_PORTAL_URL'];
     const missingVars = requiredVars.filter(v => !envContent.includes(v));
     if (missingVars.length > 0) {
-      warn(`Missing recommended env vars: ${missingVars.join(', ')}`);
+      fail(`Missing required env vars in .env.example: ${missingVars.join(', ')}`, 'The VITE_APP_ID and VITE_OAUTH_PORTAL_URL are required for OAuth/Manus login.');
     } else {
       log('success', 'Key environment variables documented');
     }
+  }
+
+  const envFile = path.join(ROOT, '.env');
+  if (fs.existsSync(envFile)) {
+    const content = fs.readFileSync(envFile, 'utf8');
+    const required = ['VITE_APP_ID', 'VITE_OAUTH_PORTAL_URL'];
+    const missing = required.filter(v => !content.includes(v));
+    if (missing.length > 0) {
+      fail(`Missing ${missing.join(', ')} in .env`, `Local login will fail without these variables.`);
+    }
+  } else {
+    warn('.env file not found', 'Create one from .env.example for local development');
   }
 
   const railwayConfig = path.join(ROOT, 'railway.json');

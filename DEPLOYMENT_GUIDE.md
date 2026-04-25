@@ -418,7 +418,8 @@ WebSocket connections require special handling with Netlify redirects. If real-t
 | `S3_ACCESS_KEY_ID` | Yes | AWS access key for S3 |
 | `S3_SECRET_ACCESS_KEY` | Yes | AWS secret key for S3 |
 | `OAUTH_SERVER_URL` | If using OAuth | OAuth server base URL |
-| `VITE_APP_ID` | If using OAuth | OAuth application ID |
+| `VITE_APP_ID` | Yes | OAuth application ID (e.g., `erectile-dysfunction-tracker`) |
+| `VITE_OAUTH_PORTAL_URL` | Yes | OAuth portal URL (e.g., `https://manus.im`) |
 
 ### Frontend (Netlify)
 
@@ -426,6 +427,8 @@ WebSocket connections require special handling with Netlify redirects. If real-t
 |----------|----------|-------------|
 | `VITE_API_URL` | Yes | Backend server URL |
 | `VITE_APP_TITLE` | No | App title (default: ChatroomLM) |
+| `VITE_APP_ID` | Yes | OAuth application ID (must match backend) |
+| `VITE_OAUTH_PORTAL_URL` | Yes | OAuth portal URL (must match backend) |
 
 ---
 
