@@ -49,8 +49,8 @@ Ensure the following environment variables are set:
 - `PORT`: `3000` (Internal port for Node)
 - `DATABASE_URL`: Your TiDB/MySQL connection string
 - `JWT_SECRET`: A secure random string
-- `OAUTH_SERVER_URL`: Your OAuth server base URL
-- `VITE_APP_ID`: Your OAuth application ID
+- `VITE_OAUTH_PORTAL_URL`: `https://manus.im` (The Manus OAuth portal)
+- `VITE_APP_ID`: `erectile-dysfunction-tracker` (The Manus App ID)
 - `NODE_ENV`: `production`
 
 ---
