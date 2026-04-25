@@ -28,6 +28,10 @@ export default defineConfig({
   minify: false,
   platform: 'node',
   skipLibCheck: true,
+  silent: false,
+  onSuccess: async () => {
+    console.log('Build successful');
+  },
   clean: false,
   dts: false,
   sourcemap: true,
