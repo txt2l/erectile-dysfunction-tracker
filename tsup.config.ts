@@ -9,7 +9,7 @@ const external = [
 
 export default defineConfig({
   entry: {
-    '../dist/server': '_core/index.ts',
+    server: '_core/index.ts',
     oauth: '_core/oauth.ts',
     context: '_core/context.ts',
     vite: '_core/vite.ts',
