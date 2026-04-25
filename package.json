@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "concurrently \"vite\" \"tsx watch server/index.ts\"",
-    "build": "vite build && tsup",
+    "build": "vite build && tsup --skipLibCheck",
     "start": "node dist/server.js",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
