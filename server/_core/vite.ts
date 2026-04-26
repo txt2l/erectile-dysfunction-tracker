@@ -46,12 +46,20 @@ export async function setupVite(app: Express, server: Server) {
       let template = await fs.promises.readFile(templatePath, "utf-8");
       
       // Inject runtime environment variables
-      const envInjection = `<script>window.ENV_INJECTED = ${JSON.stringify({
-        VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_PORTAL_URL || process.env.OAUTH_SERVER_URL,
-        VITE_APP_ID: process.env.VITE_APP_ID || process.env.APP_ID,
-        VITE_API_URL: process.env.VITE_API_URL || process.env.RAILWAY_PUBLIC_DOMAIN || process.env.PUBLIC_DOMAIN,
-      })};</script>`;
-      template = template.replace("</head>", `${envInjection}</head>`);
+      const envVars = {
+        VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_PORTAL_URL || process.env.OAUTH_SERVER_URL || "",
+        VITE_APP_ID: process.env.VITE_APP_ID || process.env.APP_ID || "",
+        VITE_API_URL: process.env.VITE_API_URL || process.env.RAILWAY_PUBLIC_DOMAIN || process.env.PUBLIC_DOMAIN || "",
+      };
+      const envInjection = `<script>window.ENV_INJECTED = ${JSON.stringify(envVars)};</script>`;
+      
+      if (template.includes("</head>")) {
+        template = template.replace("</head>", `${envInjection}</head>`);
+      } else if (template.includes("</body>")) {
+        template = template.replace("</body>", `${envInjection}</body>`);
+      } else {
+        template = envInjection + template;
+      }
 
       template = template.replace(
         `src="/src/main.tsx"`,
@@ -93,12 +101,10 @@ export function serveStatic(app: Express) {
           return res.status(500).send("Error reading index.html");
         }
         
-        const portalUrl = process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_PORTAL_URL || process.env.OAUTH_SERVER_URL;
-        const appId = process.env.VITE_APP_ID || process.env.APP_ID;
-        
         const envVars = {
-          VITE_OAUTH_PORTAL_URL: portalUrl || "",
-          VITE_APP_ID: appId || "",
+          VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_PORTAL_URL || process.env.OAUTH_SERVER_URL || "",
+          VITE_APP_ID: process.env.VITE_APP_ID || process.env.APP_ID || "",
+          VITE_API_URL: process.env.VITE_API_URL || process.env.RAILWAY_PUBLIC_DOMAIN || process.env.PUBLIC_DOMAIN || "",
         };
         
         const envScript = `<script>window.ENV_INJECTED = ${JSON.stringify(envVars)};</script>`;
@@ -114,7 +120,7 @@ export function serveStatic(app: Express) {
           html = envScript + html;
         }
         
-        console.log(`[Injection] Injected ENV_INJECTED with appId: ${appId || "MISSING"}`);
+        console.log(`[Injection] Injected ENV_INJECTED:`, envVars);
         res.set("Content-Type", "text/html");
         res.send(html);
       });
