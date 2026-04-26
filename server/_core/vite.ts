@@ -32,8 +32,6 @@ export async function setupVite(app: Express, server: Server) {
         "main.tsx"
       );
       
-      // For development, we use the src/main.tsx as the template
-      // Vite will transform it into the full HTML page
       const actualTemplate = path.resolve(
         __dirname,
         "../..",
@@ -42,13 +40,10 @@ export async function setupVite(app: Express, server: Server) {
       
       const templatePath = fs.existsSync(actualTemplate) ? actualTemplate : clientTemplate;
 
-      // always reload the index.html file from disk incase it changes
       let template = await fs.promises.readFile(templatePath, "utf-8");
       
-      // Inject runtime environment variables
       const envVars = {
-        VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_PORTAL_URL || process.env.OAUTH_SERVER_URL || "",
-        VITE_APP_ID: process.env.VITE_APP_ID || process.env.APP_ID || "",
+        GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID || "Ov23li5jr8IVlFngehZB",
         VITE_API_URL: process.env.VITE_API_URL || process.env.RAILWAY_PUBLIC_DOMAIN || process.env.PUBLIC_DOMAIN || "",
       };
       const envInjection = `<script>window.ENV_INJECTED = ${JSON.stringify(envVars)};</script>`;
@@ -77,20 +72,14 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  // Use path.join(process.cwd(), "dist/client") as per schema for robust Railway path resolution
   const CLIENT_PATH = path.join(process.cwd(), "dist/client");
 
   console.log(`[Static] Serving files from: ${CLIENT_PATH}`);
-  
-  // CRITICAL VERIFICATION STEP (AS PER SCHEMA)
   console.log("CLIENT BUILD EXISTS:", fs.existsSync(path.join(CLIENT_PATH, "index.html")));
 
-  // 1. SERVE STATIC FRONTEND
   app.use(express.static(CLIENT_PATH, { index: false }));
 
-  // 2. SPA FALLBACK ROUTE (CRITICAL FIX)
   app.get("*", (req, res) => {
-    // Skip API routes
     if (req.originalUrl.startsWith("/api")) {
       return res.status(404).json({ error: "Not Found" });
     }
@@ -104,25 +93,12 @@ export function serveStatic(app: Express) {
         }
         
         const envVars = {
-          VITE_OAUTH_PORTAL_URL: process.env.VITE_OAUTH_PORTAL_URL || process.env.OAUTH_PORTAL_URL || process.env.OAUTH_SERVER_URL || "",
-          VITE_APP_ID: process.env.VITE_APP_ID || process.env.APP_ID || "",
+          GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID || "Ov23li5jr8IVlFngehZB",
           VITE_API_URL: process.env.VITE_API_URL || process.env.RAILWAY_PUBLIC_DOMAIN || process.env.PUBLIC_DOMAIN || "",
         };
         
         const envScript = `<script>window.ENV_INJECTED = ${JSON.stringify(envVars)};</script>`;
-        
-        // Try to inject before </head>, fallback to after <body>, then before </body>
-        let html = data;
-        if (html.includes("</head>")) {
-          html = html.replace("</head>", `${envScript}</head>`);
-        } else if (html.includes("<body>")) {
-          html = html.replace("<body>", `<body>${envScript}`);
-        } else if (html.includes("</body>")) {
-          html = html.replace("</body>", `${envScript}</body>`);
-        } else {
-          // Last resort: prepend to the entire document
-          html = envScript + html;
-        }
+        const html = envScript + data;
         
         console.log(`[Injection] Injected ENV_INJECTED:`, envVars);
         res.set("Content-Type", "text/html");
