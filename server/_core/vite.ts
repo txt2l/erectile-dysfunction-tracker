@@ -55,6 +55,8 @@ export async function setupVite(app: Express, server: Server) {
       
       if (template.includes("</head>")) {
         template = template.replace("</head>", `${envInjection}</head>`);
+      } else if (template.includes("<body>")) {
+        template = template.replace("<body>", `<body>${envInjection}`);
       } else if (template.includes("</body>")) {
         template = template.replace("</body>", `${envInjection}</body>`);
       } else {
@@ -109,10 +111,12 @@ export function serveStatic(app: Express) {
         
         const envScript = `<script>window.ENV_INJECTED = ${JSON.stringify(envVars)};</script>`;
         
-        // Try to inject before </head>, fallback to before </body>
+        // Try to inject before </head>, fallback to after <body>, then before </body>
         let html = data;
         if (html.includes("</head>")) {
           html = html.replace("</head>", `${envScript}</head>`);
+        } else if (html.includes("<body>")) {
+          html = html.replace("<body>", `<body>${envScript}`);
         } else if (html.includes("</body>")) {
           html = html.replace("</body>", `${envScript}</body>`);
         } else {

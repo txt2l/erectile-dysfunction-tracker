@@ -5,7 +5,8 @@ export const getLoginUrl = () => {
   // Use injected env if available, otherwise fallback to build-time env
   const injectedEnv = (window as any).ENV_INJECTED || {};
   const oauthPortalUrl = injectedEnv.VITE_OAUTH_PORTAL_URL || import.meta.env.VITE_OAUTH_PORTAL_URL || "https://manus.im";
-  const appId = injectedEnv.VITE_APP_ID || import.meta.env.VITE_APP_ID;
+  // Hardcoded fallback for production if both injection and build-time env are missing
+  const appId = injectedEnv.VITE_APP_ID || import.meta.env.VITE_APP_ID || "erectile-dysfunction-tracker";
   
   // Use a safe fallback for redirectUri to avoid potential issues with window.location.origin
   const origin = typeof window !== "undefined" ? window.location.origin : "";
