@@ -20,6 +20,7 @@ class GitHubOAuthService {
   constructor(private client: AxiosInstance) {}
 
   async exchangeCodeForToken(code: string): Promise<string> {
+    console.log("[GitHub SDK] Exchanging code with Client ID:", ENV.githubClientId ? "PRESENT" : "MISSING");
     const { data } = await this.client.post(
       "https://github.com/login/oauth/access_token",
       {
@@ -35,6 +36,7 @@ class GitHubOAuthService {
     );
 
     if (data.error) {
+      console.error("[GitHub SDK] Token exchange error:", data.error, data.error_description);
       throw new Error(`GitHub OAuth error: ${data.error_description || data.error}`);
     }
 
@@ -45,6 +47,7 @@ class GitHubOAuthService {
     const { data } = await this.client.get("https://api.github.com/user", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        "User-Agent": "Erectile-Dysfunction-Tracker",
       },
     });
 
@@ -140,9 +143,6 @@ class SDKServer {
     const signedInAt = new Date();
 
     if (!user) {
-      // In GitHub flow, we don't sync from JWT since we already have the user in DB from callback
-      // But if the user exists in session but not in DB (e.g. DB reset), we might need to handle it.
-      // For now, if user not found, we reject.
       throw ForbiddenError("User not found");
     }
 
