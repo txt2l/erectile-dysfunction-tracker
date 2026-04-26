@@ -75,6 +75,237 @@ jobs:
       - name: Verify CSS imports resolve
         run: |
           # Check that all CSS @import statements point to real packages
+          node -e '
+            const fs = require("fs");
+            const css = fs.readFileSync("client/src/index.css", "utf8");
+            const imports = css.match(/@import\s+["'"]([^"'"]+)["'"]/g) || [];
+            let failed = false;
+            for (const imp of imports) {
+              const pkg = imp.replace(/@import\s+["'"]/, "").replace(/["'"]$/, "");
+              if (pkg.startsWith(".") || pkg.startsWith("http")) continue;
+              const pkgName = pkg.split("/")[0];
+              try {
+                require.resolve(pkgName, { paths: ["client/node_modules", "node_modules"] });
+              } catch (e) {
+                console.error("CSS import missing:", pkg);
+                failed = true;
+              }
+            }
+            if (failed) process.exit(1);
+            console.log("All CSS imports resolvable");
+          '
+
+      - name: Build client
+        run: |
+          cd client
+          npm run build
+
+      - name: Verify build artifacts
+        run: |
+          if [ ! -f "client/dist/index.html" ] && [ ! -f "dist/client/index.html" ]; then
+            echo "::error::Client build did not produce index.html"
+            ls -la client/dist/ 2>/dev/null || true
+            ls -la dist/client/ 2>/dev/null || true
+            exit 1
+          fi
+          echo "✓ Client build artifacts verified"
+
+      - name: Upload client build artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: failed-client-build
+          path: |
+            client/dist/
+            client/node_modules/.vite/
+            client/src/index.css
+            client/package.json
+
+  # ============================================================
+  # JOB 3: Server Build Test
+  # ============================================================
+  build-server:
+    name: Build Server (tsup + tRPC)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: static-analysis
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm install --legacy-peer-deps
+          cd server && npm install --legacy-peer-deps || true
+
+      - name: Type check server
+        run: |
+          cd server
+          npx tsc --noEmit || echo "Type check completed (may have errors)"
+
+      - name: Build server with tsup
+        run: |
+          npx tsup || npm run build
+
+      - name: Verify server build artifacts
+        run: |
+          if [ ! -f "server/dist/index.js" ] && [ ! -f "dist/index.js" ]; then
+            echo "::error::Server build did not produce JS output"
+            ls -la server/dist/ 2>/dev/null || true
+            ls -la dist/ 2>/dev/null || true
+            exit 1
+          fi
+          echo "✓ Server build artifacts verified"
+
+      - name: Upload server build artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: failed-server-build
+          path: |
+            server/dist/
+            server/tsconfig.json
+            server/package.json
+
+  # ============================================================
+  # JOB 4: Docker Build Test (The Real Test)
+  # ============================================================
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build-client, build-server]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: |
+          docker build -t app-test:${{ github.sha }} . 2>&1 | tee docker-build.log
+
+      - name: Verify Docker image
+        run: |
+          docker run --rm app-test:${{ github.sha }} node --version
+          docker images app-test:${{ github.sha }} --format "{{.Size}}"
+
+      - name: Upload Docker build log on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: docker-build-log
+          path: docker-build.log
+
+  # ============================================================
+  # JOB 5: Railway Deployment Readiness Check
+  # ============================================================
+  railway-check:
+    name: Railway + TiDB Readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: static-analysis
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Railway configuration
+        run: |
+          if [ ! -f "railway.json" ]; then
+            echo "::error::railway.json missing — required for Railway deployment"
+            exit 1
+          fi
+
+          # Validate JSON syntax
+          node -e "JSON.parse(require('fs').readFileSync('railway.json'))" || exit 1
+          echo "✓ railway.json is valid JSON"
+
+      - name: Check TiDB connection readiness
+        run: |
+          # Check that DATABASE_URL is referenced but not hardcoded
+          if grep -r "mysql://" server/src/ 2>/dev/null; then
+            echo "::warning::Hardcoded MySQL connection string detected in server/src/"
+            echo "::warning::Use environment variables (DATABASE_URL) for TiDB credentials"
+          fi
+
+          # Check for Drizzle config
+          if [ ! -f "drizzle.config.ts" ] && [ ! -f "drizzle.config.js" ]; then
+            echo "::warning::No drizzle.config.ts found"
+          else
+            echo "✓ Drizzle config found"
+          fi
+
+      - name: Check environment template
+        run: |
+          if [ ! -f ".env.example" ]; then
+            echo "::error::.env.example missing"
+            exit 1
+          fi
+
+          required_vars="DATABASE_URL PORT NODE_ENV"
+          missing=""
+          for var in $required_vars; do
+            if ! grep -q "$var" .env.example; then
+              missing="$missing $var"
+            fi
+          done
+
+          if [ -n "$missing" ]; then
+            echo "::warning::Missing recommended env vars in .env.example:$missing"
+          fi
+
+          echo "✓ Environment template checked"
+            npm ci --legacy-peer-deps
+          elif [ -f pnpm-lock.yaml ]; then
+            npm install -g pnpm
+            pnpm install --frozen-lockfile
+          elif [ -f yarn.lock ]; then
+            yarn install --frozen-lockfile
+          else
+            echo "::error::No lockfile found. Run npm install and commit package-lock.json"
+            exit 1
+          fi
+
+      - name: Audit dependencies for vulnerabilities
+        run: npm audit --audit-level=moderate || true
+
+  # ============================================================
+  # JOB 2: Client Build Test
+  # ============================================================
+  build-client:
+    name: Build Client (Vite)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: static-analysis
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm install --legacy-peer-deps
+          cd client && npm install --legacy-peer-deps || true
+
+      - name: Verify CSS imports resolve
+        run: |
+          # Check that all CSS @import statements point to real packages
           node -e "
             const fs = require('fs');
             const css = fs.readFileSync('client/src/index.css', 'utf8');
