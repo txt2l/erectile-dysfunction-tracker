@@ -4,9 +4,8 @@ const getSocketUrl = () => {
   // Defensive check for window.location
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   
-  // Use injected env if available, otherwise fallback to build-time env
-  const injectedEnv = (window as any).ENV_INJECTED || {};
-  const envUrl = injectedEnv.VITE_API_URL || import.meta.env.VITE_API_URL;
+  // Use build-time env
+  const envUrl = import.meta.env.VITE_API_URL;
   
   if (envUrl) {
     try {
