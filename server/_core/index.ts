@@ -87,7 +87,16 @@ async function startServer() {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  // OAuth callback under /api/oauth/callback
+  // OAuth route guard - only allow /github and /callback
+  app.use("/api/oauth", (req, res, next) => {
+    if (req.path !== "/github" && req.path !== "/callback") {
+      console.warn(`[OAuth] Invalid route attempt: ${req.path}`);
+      return res.status(400).json({ error: "Invalid OAuth route" });
+    }
+    next();
+  });
+
+  // OAuth routes: /api/oauth/github and /api/oauth/callback only
   registerOAuthRoutes(app);
 
   // development mode uses Vite, production mode uses static files

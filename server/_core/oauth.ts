@@ -11,7 +11,8 @@ function getQueryParam(req: Request, key: string): string | undefined {
 }
 
 export function registerOAuthRoutes(app: Express) {
-  // Initiate GitHub OAuth flow from backend
+  // EXPLICIT ROUTE: /api/oauth/github only
+  // Route guard in index.ts prevents any other /api/oauth/* paths
   app.get("/api/oauth/github", (req: Request, res: Response) => {
     // Get the origin from the request header (works for all deployments)
     const origin = req.get('origin') || req.get('referer')?.split('/').slice(0, 3).join('/') || `${req.protocol}://${req.get('host')}`;
@@ -24,7 +25,8 @@ export function registerOAuthRoutes(app: Express) {
     return res.redirect(url);
   });
 
-  // Handle GitHub OAuth callback
+  // EXPLICIT ROUTE: /api/oauth/callback only
+  // Route guard in index.ts prevents any other /api/oauth/* paths
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
