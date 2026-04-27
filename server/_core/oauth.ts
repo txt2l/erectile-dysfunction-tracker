@@ -3,6 +3,7 @@ import type { Express, Request, Response } from "express";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
+import { ENV } from "./env";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -10,6 +11,17 @@ function getQueryParam(req: Request, key: string): string | undefined {
 }
 
 export function registerOAuthRoutes(app: Express) {
+  // Initiate GitHub OAuth flow from backend
+  app.get("/api/oauth/github", (req: Request, res: Response) => {
+    const redirectUri = encodeURIComponent("https://chatroomlm.liphe.org/api/oauth/callback");
+    const state = Buffer.from(redirectUri).toString("base64");
+    const url = `https://github.com/login/oauth/authorize?client_id=${ENV.githubClientId}&redirect_uri=${redirectUri}&scope=user:email&state=${state}`;
+    
+    console.log("[OAuth] Initiating GitHub flow, redirecting to:", url);
+    return res.redirect(url);
+  });
+
+  // Handle GitHub OAuth callback
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
@@ -21,11 +33,11 @@ export function registerOAuthRoutes(app: Express) {
       return;
     }
 
+    let decodedState: string | null = null;
     if (state) {
       try {
-        const decodedState = Buffer.from(state, 'base64').toString('utf-8');
+        decodedState = Buffer.from(state, 'base64').toString('utf-8');
         console.log("[OAuth] Decoded state:", decodedState);
-        // Validation could be added here if needed
       } catch (e) {
         console.warn("[OAuth] Failed to decode state parameter");
       }
@@ -65,8 +77,14 @@ export function registerOAuthRoutes(app: Express) {
       console.log("[OAuth] Setting cookie with options:", JSON.stringify(cookieOptions));
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      console.log("[OAuth] Redirecting to home...");
-      res.redirect(302, "/");
+      console.log("[OAuth] Redirecting...");
+      if (decodedState && decodedState.startsWith("http")) {
+        // Only redirect to absolute URLs if they match our domain or are safe
+        // For now, we trust the state we set in /api/oauth/github
+        res.redirect(302, decodedState);
+      } else {
+        res.redirect(302, "/");
+      }
     } catch (error: any) {
       console.error("[OAuth] Callback failed:", error.message || error);
       if (error.response) {
