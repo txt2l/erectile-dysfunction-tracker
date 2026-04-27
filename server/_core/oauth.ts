@@ -13,11 +13,14 @@ function getQueryParam(req: Request, key: string): string | undefined {
 export function registerOAuthRoutes(app: Express) {
   // Initiate GitHub OAuth flow from backend
   app.get("/api/oauth/github", (req: Request, res: Response) => {
-    const redirectUri = encodeURIComponent("https://chatroomlm.liphe.org/api/oauth/callback");
+    // Get the origin from the request header (works for all deployments)
+    const origin = req.get('origin') || req.get('referer')?.split('/').slice(0, 3).join('/') || `${req.protocol}://${req.get('host')}`;
+    const redirectUri = encodeURIComponent(`${origin}/api/oauth/callback`);
     const state = Buffer.from(redirectUri).toString("base64");
     const url = `https://github.com/login/oauth/authorize?client_id=${ENV.githubClientId}&redirect_uri=${redirectUri}&scope=user:email&state=${state}`;
     
-    console.log("[OAuth] Initiating GitHub flow, redirecting to:", url);
+    console.log("[OAuth] Initiating GitHub flow from origin:", origin);
+    console.log("[OAuth] Redirecting to:", url);
     return res.redirect(url);
   });
 
