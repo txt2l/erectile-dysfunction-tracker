@@ -15,6 +15,7 @@ COPY . .
 RUN npm run build
 
 # Prune dev dependencies to keep image lean
+# We use --omit=dev to keep only production dependencies
 RUN npm prune --omit=dev --legacy-peer-deps
 
 # Verify both builds exist

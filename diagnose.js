@@ -78,7 +78,7 @@ function checkFileStructure() {
     { path: 'server/package.json', desc: 'Server package.json' },
     { path: 'client/src/index.css', desc: 'Client CSS entry (Tailwind)' },
     { path: 'client/vite.config.ts', desc: 'Vite config' },
-    { path: 'server/src/index.ts', desc: 'Server entry point' },
+    { path: 'server/index.ts', desc: 'Server entry point' },
     { path: 'Dockerfile', desc: 'Docker build file' },
     { path: 'docker-compose.yml', desc: 'Docker compose (optional but recommended)' },
     { path: '.env.example', desc: 'Environment template' },
@@ -89,7 +89,7 @@ function checkFileStructure() {
   criticalFiles.forEach(file => {
     const fullPath = path.join(ROOT, file.path);
     if (!fs.existsSync(fullPath)) {
-      if (file.path === 'docker-compose.yml' || (file.path === '.env' && CI_MODE)) {
+      if (file.path === 'docker-compose.yml' || file.path === '.env') {
         warn(`Missing ${file.path}`, file.desc);
       } else {
         fail(`Missing ${file.path}`, file.desc);
