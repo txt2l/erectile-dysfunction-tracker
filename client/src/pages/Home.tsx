@@ -15,19 +15,27 @@ import {
   Languages,
   ArrowRight,
   Terminal,
+  Users,
+  Library,
+  Map as MapIcon,
+  ScrollText,
+  User,
 } from "lucide-react";
 
 const features = [
   { icon: MessageSquare, label: "Real-time Chat", desc: "WebSocket-powered rooms with brutalist bubbles" },
+  { icon: Users, label: "Team", desc: "Collaborate with team members and manage roles" },
+  { icon: Library, label: "Resources", desc: "Centralized library of shared knowledge and assets" },
+  { icon: MapIcon, label: "Global Map", desc: "Visualize team locations and project geography" },
   { icon: Brain, label: "Memory Bank", desc: "Store, organize, and search team knowledge" },
   { icon: CheckSquare, label: "Tasks & To-Do", desc: "Assignees, priorities, due dates, drag-and-drop" },
   { icon: Calendar, label: "Shared Calendar", desc: "Team scheduling with event creation" },
-  { icon: FolderOpen, label: "File Explorer", desc: "S3-backed file storage with previews" },
   { icon: Network, label: "Mindmap Canvas", desc: "Visual brainstorming with nodes and connections" },
   { icon: PenTool, label: "Digital Signatures", desc: "Create, store, and sign documents" },
   { icon: BookOpen, label: "Notebook", desc: "Rich Markdown notes with graph-paper aesthetic" },
   { icon: Languages, label: "AI Translation", desc: "Dev↔casual and JP↔EN in-context" },
-  { icon: Terminal, label: "Activity Log", desc: "Everything timestamped and searchable" },
+  { icon: ScrollText, label: "Activity Log", desc: "Everything timestamped and searchable" },
+  { icon: User, label: "Profile", desc: "Manage your account, settings, and preferences" },
 ];
 
 export default function Home() {
