@@ -151,6 +151,8 @@ This is the most important step. In Snap Deploy's settings, add these environmen
 | `JWT_SECRET` | A random string (at least 32 characters) | Generate one at [randomkeygen.com](https://randomkeygen.com) |
 | `NODE_ENV` | `production` | Type this exactly |
 | `PORT` | `3000` | Type this exactly |
+| `GITHUB_CLIENT_ID` | Your GitHub OAuth Client ID | From GitHub OAuth App Settings |
+| `GITHUB_CLIENT_SECRET` | Your GitHub OAuth Client Secret | From GitHub OAuth App Settings |
 | `BUILT_IN_FORGE_API_URL` | Your AI API endpoint | From your AI provider |
 | `BUILT_IN_FORGE_API_KEY` | Your AI API key | From your AI provider |
 | `S3_BUCKET` | Your S3 bucket name | From Step 6 |
@@ -194,6 +196,7 @@ In Netlify's **Site settings → Environment variables**, add:
 | Variable | Value |
 |----------|-------|
 | `VITE_API_URL` | The URL from Step 3.4 (e.g., `https://chatroomlm-backend.snapdeploy.app`) |
+| `VITE_GITHUB_CLIENT_ID` | Your GitHub OAuth Client ID |
 | `VITE_APP_TITLE` | `ChatroomLM` |
 
 ### 4.4 Deploy
@@ -411,24 +414,22 @@ WebSocket connections require special handling with Netlify redirects. If real-t
 | `JWT_SECRET` | Yes | Random string for signing auth tokens |
 | `NODE_ENV` | Yes | Set to `production` |
 | `PORT` | No | Server port (default: 3000) |
+| `GITHUB_CLIENT_ID` | Yes | GitHub OAuth Client ID |
+| `GITHUB_CLIENT_SECRET` | Yes | GitHub OAuth Client Secret |
 | `BUILT_IN_FORGE_API_URL` | Yes | AI API endpoint URL |
 | `BUILT_IN_FORGE_API_KEY` | Yes | AI API authentication key |
 | `S3_BUCKET` | Yes | S3 bucket name for file storage |
 | `S3_REGION` | Yes | AWS region (e.g., `us-east-1`) |
 | `S3_ACCESS_KEY_ID` | Yes | AWS access key for S3 |
 | `S3_SECRET_ACCESS_KEY` | Yes | AWS secret key for S3 |
-| `OAUTH_SERVER_URL` | If using OAuth | OAuth server base URL |
-| `VITE_APP_ID` | Yes | OAuth application ID (e.g., `erectile-dysfunction-tracker`) |
-| `VITE_OAUTH_PORTAL_URL` | Yes | OAuth portal URL (e.g., `https://manus.im`) |
 
 ### Frontend (Netlify)
 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `VITE_API_URL` | Yes | Backend server URL |
+| `VITE_GITHUB_CLIENT_ID` | Yes | GitHub OAuth Client ID |
 | `VITE_APP_TITLE` | No | App title (default: ChatroomLM) |
-| `VITE_APP_ID` | Yes | OAuth application ID (must match backend) |
-| `VITE_OAUTH_PORTAL_URL` | Yes | OAuth portal URL (must match backend) |
 
 ---
 

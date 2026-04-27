@@ -19,8 +19,8 @@ services:
     environment:
       - DATABASE_URL=mysql://root:root_password@db:3306/ed_tracker
       - NODE_ENV=development
-      - VITE_APP_ID=erectile-dysfunction-tracker
-      - VITE_OAUTH_PORTAL_URL=https://manus.im
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
     depends_on:
       db:
         condition: service_healthy

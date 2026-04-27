@@ -25,7 +25,7 @@ function Router() {
                   Authentication failed: <span className="text-destructive font-bold">{reason.replace(/_/g, " ")}</span>
                 </p>
                 <p className="text-xs text-muted-foreground mb-8">
-                  Please ensure VITE_OAUTH_PORTAL_URL and VITE_APP_ID are set in your environment variables.
+                  Please ensure GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET are set in your environment variables.
                 </p>
                 <a href="/" className="inline-block bg-foreground text-background px-6 py-2 text-xs font-bold uppercase tracking-widest hover:bg-foreground/90">
                   Return to Home

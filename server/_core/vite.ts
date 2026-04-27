@@ -42,22 +42,6 @@ export async function setupVite(app: Express, server: Server) {
 
       let template = await fs.promises.readFile(templatePath, "utf-8");
       
-      const envVars = {
-        GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID || "Ov23li5jr8IVlFngehZB",
-        VITE_API_URL: process.env.VITE_API_URL || process.env.RAILWAY_PUBLIC_DOMAIN || process.env.PUBLIC_DOMAIN || "",
-      };
-      const envInjection = `<script>window.ENV_INJECTED = ${JSON.stringify(envVars)};</script>`;
-      
-      if (template.includes("</head>")) {
-        template = template.replace("</head>", `${envInjection}</head>`);
-      } else if (template.includes("<body>")) {
-        template = template.replace("<body>", `<body>${envInjection}`);
-      } else if (template.includes("</body>")) {
-        template = template.replace("</body>", `${envInjection}</body>`);
-      } else {
-        template = envInjection + template;
-      }
-
       template = template.replace(
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`
@@ -92,17 +76,8 @@ export function serveStatic(app: Express) {
           return res.status(500).send("Error reading index.html");
         }
         
-        const envVars = {
-          GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID || "Ov23li5jr8IVlFngehZB",
-          VITE_API_URL: process.env.VITE_API_URL || process.env.RAILWAY_PUBLIC_DOMAIN || process.env.PUBLIC_DOMAIN || "",
-        };
-        
-        const envScript = `<script>window.ENV_INJECTED = ${JSON.stringify(envVars)};</script>`;
-        const html = envScript + data;
-        
-        console.log(`[Injection] Injected ENV_INJECTED:`, envVars);
         res.set("Content-Type", "text/html");
-        res.send(html);
+        res.send(data);
       });
     } else {
       console.error(`[Static] index.html not found at: ${indexPath}`);

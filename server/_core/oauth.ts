@@ -12,11 +12,23 @@ function getQueryParam(req: Request, key: string): string | undefined {
 export function registerOAuthRoutes(app: Express) {
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
+    const state = getQueryParam(req, "state");
+    
     console.log("[OAuth] Callback received with code:", code ? "PRESENT" : "MISSING");
 
     if (!code) {
       res.status(400).json({ error: "code is required" });
       return;
+    }
+
+    if (state) {
+      try {
+        const decodedState = Buffer.from(state, 'base64').toString('utf-8');
+        console.log("[OAuth] Decoded state:", decodedState);
+        // Validation could be added here if needed
+      } catch (e) {
+        console.warn("[OAuth] Failed to decode state parameter");
+      }
     }
 
     try {

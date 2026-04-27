@@ -49,8 +49,8 @@ Ensure the following environment variables are set:
 - `PORT`: `3000` (Internal port for Node)
 - `DATABASE_URL`: Your TiDB/MySQL connection string
 - `JWT_SECRET`: A secure random string
-- `VITE_OAUTH_PORTAL_URL`: `https://manus.im` (The Manus OAuth portal)
-- `VITE_APP_ID`: `erectile-dysfunction-tracker` (The Manus App ID)
+- `GITHUB_CLIENT_ID`: Your GitHub OAuth App Client ID
+- `GITHUB_CLIENT_SECRET`: Your GitHub OAuth App Client Secret
 - `NODE_ENV`: `production`
 
 ---

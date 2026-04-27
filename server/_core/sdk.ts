@@ -7,9 +7,13 @@ import { SignJWT, jwtVerify } from "jose";
 import type { User } from "../../drizzle/schema";
 import * as db from "../db";
 import { ENV } from "./env";
+import qs from 'querystring';
 
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.length > 0;
+
+const GITHUB_AUTH_URL = 'https://github.com/login/oauth/authorize';
+const GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token';
 
 export type SessionPayload = {
   openId: string;
@@ -20,17 +24,23 @@ class GitHubOAuthService {
   constructor(private client: AxiosInstance) {}
 
   async exchangeCodeForToken(code: string): Promise<string> {
-    console.log("[GitHub SDK] Exchanging code with Client ID:", ENV.githubClientId ? "PRESENT" : "MISSING");
+    console.log('OAuth Debug:', {
+      client_id: ENV.githubClientId,
+      has_secret: !!ENV.githubClientSecret,
+      code
+    });
+
     const { data } = await this.client.post(
-      "https://github.com/login/oauth/access_token",
-      {
+      GITHUB_TOKEN_URL,
+      qs.stringify({
         client_id: ENV.githubClientId,
         client_secret: ENV.githubClientSecret,
         code,
-      },
+      }),
       {
         headers: {
           Accept: "application/json",
+          'Content-Type': 'application/x-www-form-urlencoded'
         },
       }
     );
