@@ -12,7 +12,7 @@ RUN npm install --legacy-peer-deps &&     npm install tw-animate-css --legacy-pe
 COPY . .
 
 # Build client (vite -> dist/client) AND server (tsup -> dist/)
-RUN npm run build
+RUN bash scripts/fix-and-build.sh
 
 # Prune dev dependencies to keep image lean
 # We use --omit=dev to keep only production dependencies
